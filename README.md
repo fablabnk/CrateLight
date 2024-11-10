@@ -9,13 +9,13 @@ Each string has 50 LEDs, and each bottle crate contains 24 bottles/LEDs, so one 
 For our initial 'crate towers', the plan is to provide power and data at the bottom and have each crate chain to the next from the top. This would keep all the tech 'down low' with short cable lengths. Data-wise, each crate would chain as follows ('I' for input, 'O' for output).
 
 ```
-O - - - -
-        |
-  - - - -
+O - - - - - -
+            |
+  - - - - - -
   |
-  - - - -
-        |
-I - - - -
+  - - - - - -
+            |
+I - - - - - -
 ```
 # Power
 
