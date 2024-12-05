@@ -25,7 +25,7 @@ def combine_to_code_py(src_folder):
             raise FileNotFoundError("main.py not found in the source folder.")
 
         # Ensure utility files are ordered if needed
-        dependency_order = ["imports.py","init.py","colors.py", "grid_utils.py", "chase_fill.py"]
+        dependency_order = ["imports.py","init.py","colors.py", "grid_utils.py", "chase_fill.py", "42_pattern.py"]
         utility_files.sort(key=lambda f: dependency_order.index(os.path.basename(f)) if os.path.basename(f) in dependency_order else len(dependency_order))
 
         imports = []
