@@ -21,32 +21,32 @@ COLORS = {
     "YELLOW": (255, 255, 0),
     "ORANGE": (255, 128, 0),
     "PURPLE": (128, 0, 255),
-    "LIME": (128, 255, 0),
-    "TEAL": (0, 255, 128),
-    "PASTEL_GREEN": (192, 64, 64),
-    "PASTEL_BLUE": (64, 64, 255),
-    "PASTEL_RED": (64, 255, 64),
-    "PASTEL_PURPLE": (128, 64, 192),
-    "PASTEL_YELLOW": (192, 192, 64),
-    "SKY_BLUE": (64, 128, 255),
-    "SUNSET": (255, 64, 32),
-    "AQUA": (64, 255, 192),
+    #"LIME": (128, 255, 0),
+    #"TEAL": (0, 255, 128),
+    #"PASTEL_GREEN": (192, 64, 64),
+    #"PASTEL_BLUE": (64, 64, 255),
+    #"PASTEL_RED": (64, 255, 64),
+    #"PASTEL_PURPLE": (128, 64, 192),
+    #"PASTEL_YELLOW": (192, 192, 64),
+    #"SKY_BLUE": (64, 128, 255),
+    #"SUNSET": (255, 64, 32),
+    #"AQUA": (64, 255, 192),
     "MAGENTA": (255, 0, 128),
-    "GOLD": (255, 192, 0),
-    "TURQUOISE": (64, 255, 128),
-    "PEACH": (255, 64, 64),
-    "INDIGO": (64, 0, 255),
-    "CHARTREUSE": (128, 255, 0),
-    "OLIVE": (128, 128, 0),
-    "GRAY": (128, 128, 128),
-    "DARK_GRAY": (64, 64, 64),
-    "LIGHT_GRAY": (192, 192, 192),
-    "MINT": (128, 255, 192),
-    "LAVENDER": (192, 128, 255),
-    "ROSE": (255, 128, 192),
-    "CORAL": (255, 128, 64),
+    #"GOLD": (255, 192, 0),
+    #"TURQUOISE": (64, 255, 128),
+    #"PEACH": (255, 64, 64),
+    #"INDIGO": (64, 0, 255),
+    #"CHARTREUSE": (128, 255, 0),
+    #"OLIVE": (128, 128, 0),
+    #"GRAY": (128, 128, 128),
+    #"DARK_GRAY": (64, 64, 64),
+    #"LIGHT_GRAY": (192, 192, 192),
+    #"MINT": (128, 255, 192),
+    #"LAVENDER": (192, 128, 255),
+    #"ROSE": (255, 128, 192),
+    #"CORAL": (255, 128, 64),
     "CYAN": (0, 255, 255),
-    "PINK": (255, 0, 255),
+    #"PINK": (255, 0, 255),
     "OFF": (0, 0, 0),
 }
 
@@ -163,6 +163,85 @@ def light_up_grid(direction, start, delay, color):
         light_up_grid_horizontal(start, delay, color)
     if direction.lower() in ['vertical', 'v','0']:
         light_up_grid_vertical(start, delay, color)
+
+
+FT: list[list[int]] = [
+    [0,0,0,0,0,0,0,0,0,0,0,0,       0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,       0,0,0,1,1,1,1,1,1,0,0,0],
+    [0,0,0,0,0,0,0,1,1,1,0,0,       0,0,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,0,0,0,1,1,1,1,0,0,       0,1,1,1,0,0,0,0,1,1,0,0],
+    [0,0,0,0,0,1,1,0,1,1,0,0,       0,0,0,0,0,0,0,1,1,1,0,0],
+    [0,0,0,0,1,1,0,0,1,1,0,0,       0,0,0,0,0,0,1,1,1,0,0,0],
+    [0,0,0,1,1,0,0,0,1,1,0,0,       0,0,0,0,1,1,1,1,0,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,0,       0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,0,       0,1,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,1,1,1,1,1,1,1,0,0]
+]
+
+def shift_columns(matrix: list[list[int]], shift_by: int, left: bool = False) -> list[list[int]]:
+    """
+    Shift the columns of a 2D array cyclically to the right or left.
+    Args:
+    - matrix: 2D list of integers.
+    - shift_by: Number of positions to shift.
+        Positive for right shift, negative for left shift.
+    Returns:
+    - The modified matrix with columns shifted.
+    """
+    num_cols = len(matrix[0])
+    shift_by %= num_cols
+    shifted_matrix = []
+    for row in matrix:
+        shifted_row = row[-shift_by:] + row[:-shift_by] if not left else row[shift_by:] + row[:shift_by]
+        shifted_matrix.append(shifted_row)
+    return shifted_matrix
+
+def shift_rows(matrix: list[list[int]], shift_by: int, down: bool = True) -> list[list[int]]:
+    """
+    Shift the rows of a 2D array cyclically up or down.
+    Args:
+    - matrix: 2D list of integers.
+    - shift_by: Number of positions to shift.
+        Positive for down shift, negative for up shift.
+    Returns:
+    - The modified matrix with rows shifted.
+    """
+    num_rows = len(matrix)
+    shift_by %= num_rows
+    shifted_matrix = matrix[-shift_by:] + matrix[:-shift_by] if down else matrix[shift_by:] + matrix[:shift_by]
+    return shifted_matrix
+
+def ft_draw(vertical: bool = False) -> None:
+    i: int = 0
+    grd = FT
+    if not vertical:
+        left = random.choice([True, False])
+        while True:
+            color = (0,0,0) #COLORS["WHITE"] #get_random_color()
+            color2 = get_random_color()
+            if color == color2:
+                color = get_random_color()
+            if i >= 10 and i <= 34:
+                grd = shift_columns(FT, (i-10)%24, left)
+            draw_from_grid(grd, color, color2)
+            i += 1
+            if i == 44:
+                return
+    else:
+        down = random.choice([True, False])
+        while True:
+            color = (0,0,0)
+            color2 = get_random_color()
+            if color == color2:
+                color = get_random_color()
+            if i >= 10 and i <= 22:
+                grd = shift_rows(FT, (i-10)%12, down)
+            draw_from_grid(grd, color, color2)
+            i += 1
+            if i == 32:
+                return
 
 # game_of_life.py
 # Game of Life step function
@@ -391,31 +470,24 @@ def create_pixel_representation(text):
 
 # Main loop for experimenting
 while True:
+    position = random.choice(['1', '0'])
+    direction = random.choice(['1', '0'])
+    light_up_grid(direction, position, 0.1, get_random_color())
+    position = random.choice(['1', '0'])
+    direction = random.choice(['1', '0'])
+    light_up_grid(direction, position, 0.1, get_random_color())
+    position = random.choice(['1', '0'])
+    direction = random.choice(['1', '0'])
+    light_up_grid(direction, position, 0.1, get_random_color())
+    ft_draw(random.choice([True, False]))
     color = get_random_color()
     color2 = get_random_color()
-    brd: list[list[int]] = [[0 if 75 < 50 else 1 for _ in range(24)] for _ in range(12)]
+    if color == color2:
+        color = get_random_color()
+    brd: list[list[int]] = [[0 if random.randint(0,100) <= 42 else 1 for _ in range(24)] for _ in range(12)]
     col = 0
-    for i in range(100):
+    for i in range(42):
         draw_from_grid(brd, color, color2)
-        #for ro in brd:
-        #    print("".join(["#" if x == 1 else " " for x in ro]))
         brd = gol_step(brd)
-        brd[col] = [1 for _ in range(24)]
-        col += 2
-        if col == 12:
-            col = 0
-    # Draw the current state of the Game of Life
- 
-
-    # Light up the grid with random colors
-    position = random.choice(['1', '0'])
-    direction = random.choice(['1', '0'])
-    light_up_grid(direction, position, 0.1, get_random_color())
-    position = random.choice(['1', '0'])
-    direction = random.choice(['1', '0'])
-    light_up_grid(direction, position, 0.1, get_random_color())
-    position = random.choice(['1', '0'])
-    direction = random.choice(['1', '0'])
-    light_up_grid(direction, position, 0.1, get_random_color())
-
-    time.sleep(0.5)  # Delay for visualization
+        for _ in range(42):
+            brd[random.randint(0, 11)][random.randint(0, 23)] = 1
