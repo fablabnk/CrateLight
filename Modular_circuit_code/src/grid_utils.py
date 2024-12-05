@@ -28,3 +28,47 @@ def id_to_coords(led_id):
             if id == led_id:
                 return (x, y)
     return None
+
+# turn off all 
+def clear_grid():
+    for i in range(num_leds):
+        pixels[i] = OFF
+    pixels.show()
+
+# color border
+def borders(color1, color2):
+    for i in range(num_leds):
+        if ((i + 1) % 25 == 0):
+            continue
+        elif coords_by_id[i][0] == 0 or coords_by_id[i][0] == 23:
+            pixels[i] = color1
+        elif coords_by_id[i][1] == 0 or coords_by_id[i][1] == 11:
+            pixels[i] = color1
+        else:
+            pixels[i] = color2
+    pixels.show()
+    time.sleep(0.5)
+
+# color by coordinates
+def color_coords(x, y, color):
+    index = coords_to_id(x, y)
+    if index is not None:
+        pixels[index - 1] = color
+        pixels.show()
+    time.sleep(0.5)
+
+# color by led id
+def color_id(id, color):
+    pixels[id] = color
+    pixels.show()
+
+def draw_from_grid(drawing, color1, color2):
+    for y in range(12):
+        for x in range(24):
+            index = coords_to_id(x, y)
+            if drawing[y][x] == 1:
+                pixels[index ] = color1
+            else:
+                pixels[index] = color2
+    pixels.show()
+    time.sleep(0.5)
