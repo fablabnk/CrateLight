@@ -35,7 +35,7 @@ COLORS = {
     #"GOLD": (255, 192, 0),
     #"TURQUOISE": (64, 255, 128),
     #"PEACH": (255, 64, 64),
-    "INDIGO": (64, 0, 255),
+    #"INDIGO": (64, 0, 255),
     #"CHARTREUSE": (128, 255, 0),
     #"OLIVE": (128, 128, 0),
     #"GRAY": (128, 128, 128),
@@ -45,9 +45,9 @@ COLORS = {
     #"LAVENDER": (192, 128, 255),
     #"ROSE": (255, 128, 192),
     #"CORAL": (255, 128, 64),
-    #"CYAN": (0, 255, 255),
+    "CYAN": (0, 255, 255),
     #"PINK": (255, 0, 255),
-    #"OFF": (0, 0, 0),
+    "OFF": (0, 0, 0),
 }
 
 def get_random_color():
@@ -163,6 +163,85 @@ def light_up_grid(direction, start, delay, color):
         light_up_grid_horizontal(start, delay, color)
     if direction.lower() in ['vertical', 'v','0']:
         light_up_grid_vertical(start, delay, color)
+
+
+FT: list[list[int]] = [
+    [0,0,0,0,0,0,0,0,0,0,0,0,       0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,       0,0,0,1,1,1,1,1,1,0,0,0],
+    [0,0,0,0,0,0,0,1,1,1,0,0,       0,0,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,0,0,0,1,1,1,1,0,0,       0,1,1,1,0,0,0,0,1,1,0,0],
+    [0,0,0,0,0,1,1,0,1,1,0,0,       0,0,0,0,0,0,0,1,1,1,0,0],
+    [0,0,0,0,1,1,0,0,1,1,0,0,       0,0,0,0,0,0,1,1,1,0,0,0],
+    [0,0,0,1,1,0,0,0,1,1,0,0,       0,0,0,0,1,1,1,1,0,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,0,       0,0,1,1,1,1,0,0,0,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,0,       0,1,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,1,1,1,1,1,1,1,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,1,1,1,1,1,1,1,0,0]
+]
+
+def shift_columns(matrix: list[list[int]], shift_by: int, left: bool = False) -> list[list[int]]:
+    """
+    Shift the columns of a 2D array cyclically to the right or left.
+    Args:
+    - matrix: 2D list of integers.
+    - shift_by: Number of positions to shift.
+        Positive for right shift, negative for left shift.
+    Returns:
+    - The modified matrix with columns shifted.
+    """
+    num_cols = len(matrix[0])
+    shift_by %= num_cols
+    shifted_matrix = []
+    for row in matrix:
+        shifted_row = row[-shift_by:] + row[:-shift_by] if not left else row[shift_by:] + row[:shift_by]
+        shifted_matrix.append(shifted_row)
+    return shifted_matrix
+
+def shift_rows(matrix: list[list[int]], shift_by: int, down: bool = True) -> list[list[int]]:
+    """
+    Shift the rows of a 2D array cyclically up or down.
+    Args:
+    - matrix: 2D list of integers.
+    - shift_by: Number of positions to shift.
+        Positive for down shift, negative for up shift.
+    Returns:
+    - The modified matrix with rows shifted.
+    """
+    num_rows = len(matrix)
+    shift_by %= num_rows
+    shifted_matrix = matrix[-shift_by:] + matrix[:-shift_by] if down else matrix[shift_by:] + matrix[:shift_by]
+    return shifted_matrix
+
+def ft_draw(vertical: bool = False) -> None:
+    i: int = 0
+    grd = FT
+    if not vertical:
+        left = random.choice([True, False])
+        while True:
+            color = (0,0,0) #COLORS["WHITE"] #get_random_color()
+            color2 = get_random_color()
+            if color == color2:
+                color = get_random_color()
+            if i >= 10 and i <= 34:
+                grd = shift_columns(FT, (i-10)%24, left)
+            draw_from_grid(grd, color, color2)
+            i += 1
+            if i == 44:
+                return
+    else:
+        down = random.choice([True, False])
+        while True:
+            color = (0,0,0)
+            color2 = get_random_color()
+            if color == color2:
+                color = get_random_color()
+            if i >= 10 and i <= 22:
+                grd = shift_rows(FT, (i-10)%12, down)
+            draw_from_grid(grd, color, color2)
+            i += 1
+            if i == 32:
+                return
 
 # game_of_life.py
 # Game of Life step function
@@ -389,83 +468,57 @@ def create_pixel_representation(text):
 
 # Initialize the Game of Life board
 
-FT: list[list[int]] = [
-    [0,0,0,0,0,0,0,0,0,0,0,0,       0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,1,1,0,0,       0,0,0,1,1,1,1,1,1,0,0,0],
-    [0,0,0,0,0,0,0,1,1,1,0,0,       0,0,1,1,1,1,1,1,1,1,0,0],
-    [0,0,0,0,0,0,1,1,1,1,0,0,       0,1,1,1,0,0,0,0,1,1,0,0],
-    [0,0,0,0,0,1,1,0,1,1,0,0,       0,0,0,0,0,0,0,1,1,1,0,0],
-    [0,0,0,0,1,1,0,0,1,1,0,0,       0,0,0,0,0,0,1,1,1,0,0,0],
-    [0,0,0,1,1,0,0,0,1,1,0,0,       0,0,0,0,1,1,1,1,0,0,0,0],
-    [0,0,1,1,1,1,1,1,1,1,1,0,       0,0,1,1,1,1,0,0,0,0,0,0],
-    [0,0,1,1,1,1,1,1,1,1,1,0,       0,1,1,1,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,1,1,1,1,1,1,1,0,0],
-    [0,0,0,0,0,0,0,0,1,1,0,0,       0,1,1,1,1,1,1,1,1,1,0,0]
-]
+brd: list[list[int]] = [[0 for _ in range(24)] for _ in range(12)]
 
-def shift_columns(matrix: list[list[int]], shift_by: int, left: bool = False) -> list[list[int]]:
-    """
-    Shift the columns of a 2D array cyclically to the right or left.
-    Args:
-    - matrix: 2D list of integers.
-    - shift_by: Number of positions to shift.
-        Positive for right shift, negative for left shift.
-    Returns:
-    - The modified matrix with columns shifted.
-    """
-    num_cols = len(matrix[0])
-    shift_by %= num_cols
-    shifted_matrix = []
-    for row in matrix:
-        shifted_row = row[-shift_by:] + row[:-shift_by] if not left else row[shift_by:] + row[:shift_by]
-        shifted_matrix.append(shifted_row)
-    return shifted_matrix
+brd[0][2] = 1
+brd[1][0] = 1
+brd[1][2] = 1
+brd[2][1] = 1
+brd[2][2] = 1
 
-def shift_rows(matrix: list[list[int]], shift_by: int, down: bool = True) -> list[list[int]]:
-    """
-    Shift the rows of a 2D array cyclically up or down.
-    Args:
-    - matrix: 2D list of integers.
-    - shift_by: Number of positions to shift.
-        Positive for down shift, negative for up shift.
-    Returns:
-    - The modified matrix with rows shifted.
-    """
-    num_rows = len(matrix)
-    shift_by %= num_rows
-    shifted_matrix = matrix[-shift_by:] + matrix[:-shift_by] if down else matrix[shift_by:] + matrix[:shift_by]
-    return shifted_matrix
+brd[5][2] = 1
+brd[6][0] = 1
+brd[6][2] = 1
+brd[7][1] = 1
+brd[7][2] = 1
 
-def ft_draw(vertical: bool = False) -> None:
-    i: int = 0
-    grd = FT
-    if not vertical:
-        left = random.choice([True, False])
-        while True:
-            color = (0,0,0) #COLORS["WHITE"] #get_random_color()
-            color2 = get_random_color()
-            if color == color2:
-                color = get_random_color()
-            if i >= 10 and i <= 34:
-                grd = shift_columns(FT, (i-10)%24, left)
-            draw_from_grid(grd, color, color2)
-            i += 1
-            if i == 44:
-                return
-    else:
-        down = random.choice([True, False])
-        while True:
-            color = (0,0,0)
-            color2 = get_random_color()
-            if color == color2:
-                color = get_random_color()
-            if i >= 10 and i <= 22:
-                grd = shift_rows(FT, (i-10)%12, down)
-            draw_from_grid(grd, color, color2)
-            i += 1
-            if i == 32:
-                return
+brd[5][2+5] = 1
+brd[6][0+5] = 1
+brd[6][2+5] = 1
+brd[7][1+5] = 1
+brd[7][2+5] = 1
+
+brd[0][2+5] = 1
+brd[1][0+5] = 1
+brd[1][2+5] = 1
+brd[2][1+5] = 1
+brd[2][2+5] = 1
+
+brd[5][2+10] = 1
+brd[6][0+10] = 1
+brd[6][2+10] = 1
+brd[7][1+10] = 1
+brd[7][2+10] = 1
+
+brd[0][2+10] = 1
+brd[1][0+10] = 1
+brd[1][2+10] = 1
+brd[2][1+10] = 1
+brd[2][2+10] = 1
+
+brd[5][2+15] = 1
+brd[6][0+15] = 1
+brd[6][2+15] = 1
+brd[7][1+15] = 1
+brd[7][2+15] = 1
+
+brd[0][2+15] = 1
+brd[1][0+15] = 1
+brd[1][2+15] = 1
+brd[2][1+15] = 1
+brd[2][2+15] = 1
+
+# brd = FT
 
 # Main loop for experimenting
 while True:
@@ -483,22 +536,6 @@ while True:
     color2 = get_random_color()
     if color == color2:
         color = get_random_color()
-    brd: list[list[int]] = [[0 if random.randint(0,100) <= 42 else 1 for _ in range(24)] for _ in range(12)]
-    col = 0
-    for i in range(42):
+    for i in range(19):
         draw_from_grid(brd, color, color2)
         brd = gol_step(brd)
-        for _ in range(42):
-            brd[random.randint(0, 11)][random.randint(0, 23)] = 1
-    # Light up the grid with random colors
-    position = random.choice(['1', '0'])
-    direction = random.choice(['1', '0'])
-    light_up_grid(direction, position, 0.1, get_random_color())
-    position = random.choice(['1', '0'])
-    direction = random.choice(['1', '0'])
-    light_up_grid(direction, position, 0.1, get_random_color())
-    position = random.choice(['1', '0'])
-    direction = random.choice(['1', '0'])
-    light_up_grid(direction, position, 0.1, get_random_color())
-
-    #time.sleep(0.5)  # Delay for visualization
