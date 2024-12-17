@@ -1,3 +1,5 @@
+import time
+from init import pixels, num_leds
 # Define your LED coordinate mapping
 ids_by_coord = [
     [297, 298, 287, 286, 279, 278, 270, 269, 262, 261, 254, 253, 245, 244, 237, 236, 229, 228, 220, 219, 212, 211, 204, 203],
@@ -32,31 +34,17 @@ def id_to_coords(led_id):
 # turn off all 
 def clear_grid():
     for i in range(num_leds):
-        pixels[i] = OFF
+        pixels[i] = (0, 0, 0)
     pixels.show()
 
-# color border
-def borders(color1, color2):
-    for i in range(num_leds):
-        if ((i + 1) % 25 == 0):
-            continue
-        elif coords_by_id[i][0] == 0 or coords_by_id[i][0] == 23:
-            pixels[i] = color1
-        elif coords_by_id[i][1] == 0 or coords_by_id[i][1] == 11:
-            pixels[i] = color1
-        else:
-            pixels[i] = color2
-    pixels.show()
-    time.sleep(0.5)
 
 # color by coordinates
 def color_coords(x, y, color):
     index = coords_to_id(x, y)
     if index is not None:
-        pixels[index - 1] = color
+        pixels[index] = color
         pixels.show()
-    time.sleep(0.5)
-
+    
 # color by led id
 def color_id(id, color):
     pixels[id] = color

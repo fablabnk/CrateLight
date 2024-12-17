@@ -1,3 +1,6 @@
+import board
+import neopixel
+
 # Configure the pin connected to the NeoPixel data line
 pixel_pin = board.GP28  # Change this to the GPIO pin you're using
 

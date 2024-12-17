@@ -1,3 +1,5 @@
+import random
+
 COLORS = {
     "RED": (0, 255, 0),
     "GREEN": (255, 0, 0),

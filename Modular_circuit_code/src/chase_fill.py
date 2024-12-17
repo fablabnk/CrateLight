@@ -1,3 +1,6 @@
+import time
+from grid_utils import coords_to_id, ids_by_coord
+from init import pixels
 
 def light_up_grid_horizontal(start, delay, color):
     if start.lower() in ['top', 't', '1']:

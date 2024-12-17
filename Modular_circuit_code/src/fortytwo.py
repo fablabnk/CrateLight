@@ -1,4 +1,7 @@
 import random
+from colors import get_random_color 
+from grid_utils import draw_from_grid 
+
 
 FT: list[list[int]] = [
     [0,0,0,0,0,0,0,0,0,0,0,0,       0,0,0,0,0,0,0,0,0,0,0,0],
