@@ -3,6 +3,7 @@ import neopixel
 import random
 import time
 
+
 # Configure the pin connected to the NeoPixel data line
 pixel_pin = board.GP28  # Change this to the GPIO pin you're using
 
@@ -13,6 +14,7 @@ num_rows = num_leds // leds_per_row  # Calculate the number of rows
 
 # NeoPixel object
 pixels = neopixel.NeoPixel(pixel_pin, num_leds, brightness=0.5, auto_write=False)
+
 COLORS = {
     "RED": (0, 255, 0),
     "GREEN": (255, 0, 0),
@@ -86,31 +88,17 @@ def id_to_coords(led_id):
 # turn off all 
 def clear_grid():
     for i in range(num_leds):
-        pixels[i] = OFF
+        pixels[i] = (0, 0, 0)
     pixels.show()
 
-# color border
-def borders(color1, color2):
-    for i in range(num_leds):
-        if ((i + 1) % 25 == 0):
-            continue
-        elif coords_by_id[i][0] == 0 or coords_by_id[i][0] == 23:
-            pixels[i] = color1
-        elif coords_by_id[i][1] == 0 or coords_by_id[i][1] == 11:
-            pixels[i] = color1
-        else:
-            pixels[i] = color2
-    pixels.show()
-    time.sleep(0.5)
 
 # color by coordinates
 def color_coords(x, y, color):
     index = coords_to_id(x, y)
     if index is not None:
-        pixels[index - 1] = color
+        pixels[index] = color
         pixels.show()
-    time.sleep(0.5)
-
+    
 # color by led id
 def color_id(id, color):
     pixels[id] = color
@@ -163,6 +151,7 @@ def light_up_grid(direction, start, delay, color):
         light_up_grid_horizontal(start, delay, color)
     if direction.lower() in ['vertical', 'v','0']:
         light_up_grid_vertical(start, delay, color)
+
 
 
 FT: list[list[int]] = [
@@ -243,6 +232,58 @@ def ft_draw(vertical: bool = False) -> None:
             if i == 32:
                 return
 
+# brd = FT
+# Initialize the Game of Life board
+
+brd: list[list[int]] = [[0 for _ in range(24)] for _ in range(12)]
+
+brd[0][2] = 1
+brd[1][0] = 1
+brd[1][2] = 1
+brd[2][1] = 1
+brd[2][2] = 1
+
+brd[5][2] = 1
+brd[6][0] = 1
+brd[6][2] = 1
+brd[7][1] = 1
+brd[7][2] = 1
+
+brd[5][2+5] = 1
+brd[6][0+5] = 1
+brd[6][2+5] = 1
+brd[7][1+5] = 1
+brd[7][2+5] = 1
+
+brd[0][2+5] = 1
+brd[1][0+5] = 1
+brd[1][2+5] = 1
+brd[2][1+5] = 1
+brd[2][2+5] = 1
+
+brd[5][2+10] = 1
+brd[6][0+10] = 1
+brd[6][2+10] = 1
+brd[7][1+10] = 1
+brd[7][2+10] = 1
+
+brd[0][2+10] = 1
+brd[1][0+10] = 1
+brd[1][2+10] = 1
+brd[2][1+10] = 1
+brd[2][2+10] = 1
+
+brd[5][2+15] = 1
+brd[6][0+15] = 1
+brd[6][2+15] = 1
+brd[7][1+15] = 1
+brd[7][2+15] = 1
+
+brd[0][2+15] = 1
+brd[1][0+15] = 1
+brd[1][2+15] = 1
+brd[2][1+15] = 1
+brd[2][2+15] = 1
 # game_of_life.py
 # Game of Life step function
 def gol_step(brd: list[list[int]]) -> list[list[int]]:
@@ -466,59 +507,6 @@ def create_pixel_representation(text):
 
     return representation
 
-# Initialize the Game of Life board
-
-brd: list[list[int]] = [[0 for _ in range(24)] for _ in range(12)]
-
-brd[0][2] = 1
-brd[1][0] = 1
-brd[1][2] = 1
-brd[2][1] = 1
-brd[2][2] = 1
-
-brd[5][2] = 1
-brd[6][0] = 1
-brd[6][2] = 1
-brd[7][1] = 1
-brd[7][2] = 1
-
-brd[5][2+5] = 1
-brd[6][0+5] = 1
-brd[6][2+5] = 1
-brd[7][1+5] = 1
-brd[7][2+5] = 1
-
-brd[0][2+5] = 1
-brd[1][0+5] = 1
-brd[1][2+5] = 1
-brd[2][1+5] = 1
-brd[2][2+5] = 1
-
-brd[5][2+10] = 1
-brd[6][0+10] = 1
-brd[6][2+10] = 1
-brd[7][1+10] = 1
-brd[7][2+10] = 1
-
-brd[0][2+10] = 1
-brd[1][0+10] = 1
-brd[1][2+10] = 1
-brd[2][1+10] = 1
-brd[2][2+10] = 1
-
-brd[5][2+15] = 1
-brd[6][0+15] = 1
-brd[6][2+15] = 1
-brd[7][1+15] = 1
-brd[7][2+15] = 1
-
-brd[0][2+15] = 1
-brd[1][0+15] = 1
-brd[1][2+15] = 1
-brd[2][1+15] = 1
-brd[2][2+15] = 1
-
-# brd = FT
 
 # Main loop for experimenting
 while True:

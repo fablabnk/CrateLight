@@ -1,56 +1,9 @@
-# Initialize the Game of Life board
-
-brd: list[list[int]] = [[0 for _ in range(24)] for _ in range(12)]
-
-brd[0][2] = 1
-brd[1][0] = 1
-brd[1][2] = 1
-brd[2][1] = 1
-brd[2][2] = 1
-
-brd[5][2] = 1
-brd[6][0] = 1
-brd[6][2] = 1
-brd[7][1] = 1
-brd[7][2] = 1
-
-brd[5][2+5] = 1
-brd[6][0+5] = 1
-brd[6][2+5] = 1
-brd[7][1+5] = 1
-brd[7][2+5] = 1
-
-brd[0][2+5] = 1
-brd[1][0+5] = 1
-brd[1][2+5] = 1
-brd[2][1+5] = 1
-brd[2][2+5] = 1
-
-brd[5][2+10] = 1
-brd[6][0+10] = 1
-brd[6][2+10] = 1
-brd[7][1+10] = 1
-brd[7][2+10] = 1
-
-brd[0][2+10] = 1
-brd[1][0+10] = 1
-brd[1][2+10] = 1
-brd[2][1+10] = 1
-brd[2][2+10] = 1
-
-brd[5][2+15] = 1
-brd[6][0+15] = 1
-brd[6][2+15] = 1
-brd[7][1+15] = 1
-brd[7][2+15] = 1
-
-brd[0][2+15] = 1
-brd[1][0+15] = 1
-brd[1][2+15] = 1
-brd[2][1+15] = 1
-brd[2][2+15] = 1
-
-# brd = FT
+import random
+from chase_fill import light_up_grid
+from colors import get_random_color
+from grid_utils import draw_from_grid
+from game_of_life import gol_step, brd
+from fortytwo import ft_draw
 
 # Main loop for experimenting
 while True:

@@ -1,3 +1,55 @@
+# brd = FT
+# Initialize the Game of Life board
+
+brd: list[list[int]] = [[0 for _ in range(24)] for _ in range(12)]
+
+brd[0][2] = 1
+brd[1][0] = 1
+brd[1][2] = 1
+brd[2][1] = 1
+brd[2][2] = 1
+
+brd[5][2] = 1
+brd[6][0] = 1
+brd[6][2] = 1
+brd[7][1] = 1
+brd[7][2] = 1
+
+brd[5][2+5] = 1
+brd[6][0+5] = 1
+brd[6][2+5] = 1
+brd[7][1+5] = 1
+brd[7][2+5] = 1
+
+brd[0][2+5] = 1
+brd[1][0+5] = 1
+brd[1][2+5] = 1
+brd[2][1+5] = 1
+brd[2][2+5] = 1
+
+brd[5][2+10] = 1
+brd[6][0+10] = 1
+brd[6][2+10] = 1
+brd[7][1+10] = 1
+brd[7][2+10] = 1
+
+brd[0][2+10] = 1
+brd[1][0+10] = 1
+brd[1][2+10] = 1
+brd[2][1+10] = 1
+brd[2][2+10] = 1
+
+brd[5][2+15] = 1
+brd[6][0+15] = 1
+brd[6][2+15] = 1
+brd[7][1+15] = 1
+brd[7][2+15] = 1
+
+brd[0][2+15] = 1
+brd[1][0+15] = 1
+brd[1][2+15] = 1
+brd[2][1+15] = 1
+brd[2][2+15] = 1
 # game_of_life.py
 # Game of Life step function
 def gol_step(brd: list[list[int]]) -> list[list[int]]:
