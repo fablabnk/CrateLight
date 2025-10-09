@@ -1,5 +1,5 @@
-# game_of_life.py
-# Game of Life step function
+"""Conway's Game of Life implementation"""
+
 def gol_step(brd: list[list[int]]) -> list[list[int]]:
     """Performs one step in the Game of Life."""
     next_brd = [row[:] for row in brd]  # Create a copy of the board for updates
@@ -19,4 +19,3 @@ def gol_step(brd: list[list[int]]) -> list[list[int]]:
                 if neighbors == 3:
                     next_brd[y][x] = 1
     return next_brd
-

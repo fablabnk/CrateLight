@@ -1,62 +1,386 @@
-The project is our version of the classic [C-Base 'Mate Light'](https://github.com/jaseg/matelight). The aim is to make a large scale pixel wall using bottle crates and LED strings, where each bottle represents a pixel and has one LED placed just inside the bottleneck. Our first implementation of this will be to build two 'crate towers' for our coding school's winter festival.
+# CrateLight Library
 
-# About the LED Strings
+A modular LED animation library for Raspberry Pi Pico with NeoPixel LED grids and strips.
 
-We bought a set of WS2811 LED strings from AliExpress that run at 5V (not the 12V typically used in WS2811 LED strips). The strings use a three-wire system of power, data and ground, are chainable via connectors and also have bare-wire power injection points. The length of the wires between each LED is just slightly longer than the space between bottlenecks, making them ideal for this project. Also, in comparison to LED strips, they can easily bend around corners.
+## Table of Contents
 
-Each string has 50 LEDs, and each bottle crate contains 24 bottles/LEDs, so one string can drive just over 2 crates. Chaining is handled by the provided connectors, but as we need to bridge a larger gap between crates, it might be necessary to cut the strings in places (or perhaps more cleverly, skip an LED at this point).
+- [Quick Start](#quick-start)
+  - [Hardware Setup](#hardware-setup)
+  - [Simple Effect Example](#simple-effect-example)
+  - [Complete Working Example](#complete-working-example)
+- [Using Pre-Built Effects](#using-pre-built-effects)
+- [Creating Custom Effects](#creating-custom-effects)
+- [Effect Manager](#effect-manager)
+- [Available Effects](#available-effects)
+- [Adding BPM Sync](#adding-bpm-sync)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Features](#features)
+- [Contributing](#contributing)
 
-For our initial 'crate towers', the plan is to provide power and data at the bottom and have each crate chain to the next from the top. This would keep all the tech 'down low' with short cable lengths. Data-wise, each crate would chain as follows ('I' for input, 'O' for output).
+---
+
+## Quick Start
+
+### Hardware Setup
+
+Choose your hardware configuration:
+
+```python
+import sys
+sys.path.insert(0, './lib')
+
+from cratelight import CrateLightGrid, LEDStrip, ZigzagGrid, LinearGrid
+import board
+
+# Option A: CrateLight 24x12 Grid
+config = CrateLightGrid(pin=board.GP28, brightness=0.5)
+
+# Option B: LED Strip (256 LEDs)
+# config = LEDStrip(pin=board.GP2, num_leds=256, brightness=0.1)
+
+# Option C: Zigzag Grid (32x8)
+# config = ZigzagGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
+
+# Option D: Linear Grid (32x8)
+# config = LinearGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
+
+# Create the pixels object
+pixels = config.create_pixels()
+```
+
+### Simple Effect Example
+
+```python
+from cratelight import Effect, COLORS
+
+class MyEffect(Effect):
+    def setup(self):
+        """Initialize your effect"""
+        self.counter = 0
+
+    def update(self):
+        """Run each frame"""
+        # Example: Light up LEDs one by one
+        y = self.counter // self.width
+        x = self.counter % self.width
+
+        led_id = self.coords_to_id(x, y)
+        if led_id is not None:
+            self.pixels[led_id] = COLORS["RED"]
+
+        self.counter += 1
+        return self.counter < (self.width * self.height)
+
+# Create and run effect
+effect = MyEffect(pixels, config.width, config.height, config)
+effect.run(fps=30)
+```
+
+### Complete Working Example
+
+```python
+import sys
+sys.path.insert(0, './lib')
+
+import board
+from cratelight import Effect, COLORS, CrateLightGrid
+
+# 1. Configure hardware
+config = CrateLightGrid(pin=board.GP28, brightness=0.5)
+pixels = config.create_pixels()
+
+# 2. Create effect
+class BlinkEffect(Effect):
+    def setup(self):
+        self.state = False
+
+    def update(self):
+        color = COLORS["BLUE"] if self.state else COLORS["OFF"]
+        for i in range(len(self.pixels)):
+            self.pixels[i] = color
+        self.state = not self.state
+        return True
+
+# 3. Run it
+effect = BlinkEffect(pixels, config.width, config.height, config)
+effect.run(fps=2)
+```
+
+**The beauty:** Same effect code works on different hardware! Just swap the config line.
+
+---
+
+## Using Pre-Built Effects
+
+```python
+import sys
+sys.path.insert(0, './lib')
+
+from cratelight import EffectManager, LinearGrid, BPMClock
+from cratelight.effects import PulseOnBeat, RainbowChase, StrobeEffect
+import board
+
+# Hardware setup
+config = LinearGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
+pixels = config.create_pixels()
+clock = BPMClock(pin=board.GP15, default_bpm=120)
+
+# Create effect manager
+manager = EffectManager(pixels, config.width, config.height, config, clock)
+
+# Add effects - clean and simple
+manager.add_effect(PulseOnBeat, beats=8)
+manager.add_effect(RainbowChase, beats=16)
+manager.repeat_effect(StrobeEffect, times=3, beats=4)
+
+# Run
+manager.run(fps=30)
+```
+
+---
+
+## Creating Custom Effects
+
+The `Effect` class provides a systematic way to create animations:
+
+```python
+from cratelight import Effect, COLORS
+
+class StarfieldEffect(Effect):
+    def setup(self):
+        """Initialize once when effect starts"""
+        self.stars = []
+        # Initialize your effect state
+
+    def update(self):
+        """Run each frame - return True to continue, False to stop"""
+        # Update star positions
+        # Draw stars to self.pixels
+        return True
+
+    def cleanup(self):
+        """Optional cleanup when effect ends"""
+        pass
+```
+
+**Template available:** Copy `examples/custom_effect_template.py` to get started!
+
+---
+
+## Effect Manager
+
+The EffectManager lets you sequence multiple effects:
+
+```python
+# Add single effect with duration
+manager.add_effect(EffectClass, beats=8, duration=5.0)
+
+# Repeat effect multiple times
+manager.repeat_effect(EffectClass, times=3, beats=4)
+
+# Add sequence with same duration
+manager.add_effect_sequence([Effect1, Effect2, Effect3], beats=8)
+```
+
+---
+
+## Available Effects
+
+Pre-built effects in `cratelight.effects`:
+
+- **PulseOnBeat** - Pulse brightness on each beat
+- **WaveEffect** - Wave pattern synced to BPM
+- **FlashOnBeat** - Sharp flash on each beat
+- **StrobeEffect** - Multi-color strobe
+- **RainbowChase** - Rainbow that moves with the beat
+- **GameOfLife** - Conway's Game of Life cellular automaton
+
+---
+
+## Adding BPM Sync
+
+```python
+from cratelight import Effect, BPMClock, sine_wave, wheel, scale_color
+import board
+
+class BPMEffect(Effect):
+    def __init__(self, pixels, width, height, hardware_config, bpm_pin):
+        super().__init__(pixels, width, height, hardware_config)
+        self.clock = BPMClock(bpm_pin, default_bpm=120)
+
+    def setup(self):
+        pass
+
+    def update(self):
+        self.clock.update()
+        phase = self.clock.get_phase()
+
+        # Pulse brightness synced to BPM
+        brightness = sine_wave(phase, power=2.0)
+        color = scale_color(wheel(self.frame_count % 256), brightness)
+
+        # Fill all LEDs
+        for i in range(len(self.pixels)):
+            self.pixels[i] = color
+
+        return True
+
+# Use it
+config = CrateLightGrid()
+pixels = config.create_pixels()
+effect = BPMEffect(pixels, config.width, config.height, config, board.GP15)
+effect.run(fps=30)
+```
+
+**Clock options:**
+- **BPMClock**: Hardware pulse detection
+- **FixedBPMClock**: Fixed-rate testing
+- **ManualClock**: Manual triggering
+
+---
+
+## Architecture
+
+### Design Philosophy
+
+The library provides a reusable, extensible framework for LED animations with:
+
+1. **Effect Base Class System** - Consistent interface for all animations
+2. **Hardware Abstraction** - Same code works on strips, grids, different layouts
+3. **Clock Synchronization** - Built-in BPM and timing support
+4. **Modular Effects** - Each effect in its own file for easy discovery
+
+### Before vs After
+
+**Before (Modular_circuit_code):**
+- ❌ Code scattered across multiple files
+- ❌ `combine.py` script needed to merge files
+- ❌ Hard to reuse in other projects
+- ❌ No systematic effect creation
+- ❌ No clock synchronization
+
+**After (lib/cratelight):**
+- ✅ Clean library structure
+- ✅ Import and use in any project
+- ✅ Effect base class for consistency
+- ✅ Clock synchronization built-in
+- ✅ Easy for contributors to add effects
+- ✅ Reusable utilities
+- ✅ Examples and templates provided
+
+### Usage Across Projects
+
+The library can be used in any project:
+
+```python
+import sys
+sys.path.insert(0, '/path/to/CrateLight/lib')
+
+from cratelight import Effect, COLORS, BPMClock
+from cratelight.effects import PulseOnBeat, RainbowChase
+
+# Use in your own projects!
+```
+
+---
+
+## Project Structure
 
 ```
-O - - - - - -
-            |
-  - - - - - -
-  |
-  - - - - - -
-            |
-I - - - - - -
-```
-# Power
+lib/cratelight/
+├── effects/            Pre-built effects library
+│   ├── pulse.py        Pulse and breathing effects
+│   ├── wave.py         Wave patterns
+│   ├── flash.py        Flash and strobe effects
+│   └── rainbow.py      Rainbow effects
+├── effect_base.py      Base Effect class
+├── effect_manager.py   Effect sequencing and cycling
+├── clock.py            BPM synchronization
+├── hardware.py         Hardware configurations
+├── colors.py           Color constants
+├── utils.py            Color manipulation utilities
+├── grid_utils.py       Grid coordinate mapping
+├── game_of_life.py     Conway's Game of Life
+└── README.md           Complete API reference
 
-It's best practice to use a dedicated power supply for the LED string(s). We shouldn't attempt to power it from any microcontroller we're using or use it to supply power to the microcontroller either. 
-
-First off I wanted to estimated the total current draw for one string. In theory, each LED draws 55.5mA/0.055A at full white (RGB) brightness, so to power one full string we need 2.775 per (3A to be on the safe side).
-
-For our first tests, I used a 65W USB charger, which was able to provide 3A through a type A connector. To provide power to the string, I butchered a type A to type B USB cable, removing the type B end and exposing the 4 wires and shielding. Here I kept the red and black wires, removed the shielding and cut back the other two coloured wires, placing heatshrink over them to prevent shorts. I then soldered the red and black wires to the exposed red/white and pure white 'power injection' cables on the LED strings.
-
-I discovered that if I just power the LEDs and provide no data, none of them will light. This makes sense, but made it slightly tricker to tell at first if the string was being powered or not. To be sure, I measured the voltage across the outer power and ground pins of the connector with a multimeter.
-
-# Data
-
-To address the LEDs, I used a Raspberry Pi Pico running CircuitPython to provide voltage to the data line of the string from a GPIO output pin. I used the Mu editor to edit and flash a simple rainbow code example (see code.py in the repo). The code uses the neopixel library, which simplies things a lot and means we don't need to get into issues of timing etc.
-
-I recommend using your PC to flash code and then to disconnect and power it separately (with a standard USB phone charger) before doing any probing/troubleshooting. I caused power surges on my laptop's USB port but luckily didn't blow it completely.
-
-To send the data from the Pico, I used a breakout connector wire (which we bought along with the strings), which clips to the beginning of the LED string and exposes the power, data and ground wires. I soldered the data wire to GPIO pin 28 (physical pin 34 - not to be confused). I also soldered the ground wire to a Pico ground pin, meaning that the Pico and LED string power supplies share a common ground, which is also good pratice.
-
-I had some issues getting the code to flash at first. I presumed that when code is saved to the Pico it is automatically flashed, which is typically true, but it's advisable to check the serial monitor pane for compilation or flashing errors, as this isn't visible by default. At first I didn't have the neopixel library installed and didn't notice for some time that my code wasn't being flashed. This causes a lot of headbashing working out why there wasn't any voltage on my GPIO pin. It helped to go back and flash a simple GPIO pin out code example first. One clue is that the onboard LED blinks twice intermittently using the default code supplied by the CircuitPython installation, but this flashing should stop when your own code is flashed. So if the blinking remains, your code didn't flash.
-
-It is also worth noting that the Pico only outputs a maximum of 3.3V on it's GPIO pins. At first I thought I would need to implement a logic level shifter to ensure that the 3.3V is recognised as 'high' but according to Perplexity this is fine:
-
-```
-The WS2811 typically recognizes a 'high' signal when the voltage on the data line is approximately 2.5V or higher, while a 'low' signal is recognized when the voltage is around 0.8V or lower. This means that for reliable operation, the data signal should ideally be driven to at least 3.3V (which is common for many microcontroller outputs) to ensure it is interpreted as a 'high' signal.
+examples/               Example implementations and templates
 ```
 
-# Next Steps
+---
 
-## Open Questions
+## Features
 
-Q: What is the maximum refresh rate and is it good enough for gaming?
+**Effect System**
+- Modular effect architecture with base class
+- Pre-built effects library (pulse, wave, flash, rainbow, strobe)
+- Effect manager for sequencing and cycling
+- BPM/clock synchronization support
 
-Q: How often do we need to inject power?
+**Hardware Support**
+- Linear LED strips
+- Zigzag grids
+- Custom coordinate mappings
+- Multiple hardware configurations
 
-A: The [Essager GaN chargers](https://www.aliexpress.com/item/1005004306745418.html) I bought for our lab's soldering irons can output 60W over the USB A connector, which is equivalent to 12A at 5V, which should be enough to power 4 strings (or 8 crates). This would mean we don't have to inject power to our towers at all, if operating them independently. But would we need thicker gauge wire than is used in a typical USB cable?
+**Utilities**
+- Grid coordinate mapping
+- Color manipulation (scaling, interpolation, wheel)
+- Wave generation and easing functions
+- Game of Life implementation
 
-## Code Projects
+**Developer Experience**
+- Each effect in its own file for easy discovery
+- Simple import system: `from cratelight.effects import EffectName`
+- Clean code examples with minimal boilerplate
+- Template for creating custom effects
 
-### Volume Level Meters
+---
 
-### Tetris
+## Contributing
 
-### Expose control with an API?
+### Creating a New Effect
+
+1. Copy `examples/custom_effect_template.py`
+2. Rename to describe your effect
+3. Implement `setup()` and `update()` methods
+4. Test and submit!
+
+### Effect Guidelines
+
+Effects should:
+- Inherit from `Effect` base class
+- Document what they do
+- Include example usage
+- Be self-contained (no hardcoded hardware beyond Effect constructor)
+- Support both grid and strip modes where applicable
+
+### Roadmap
+
+1. **Effect Sequencer**: Queue multiple effects with transitions
+2. **Network Control**: Control effects remotely
+3. **MIDI Clock**: Sync to MIDI timing
+4. **Effect Parameters**: Runtime configuration
+5. **Web Interface**: Browser-based control
+
+---
+
+## Documentation
+
+- `lib/cratelight/README.md` - Complete API reference
+- `examples/custom_effect_template.py` - Template for new effects
+- `examples/` - Working example implementations
+
+---
+
+## Usage in Your Project
+
+1. Copy `lib/cratelight/` to your project
+2. Import what you need:
+
+```python
+from cratelight import Effect, EffectManager, COLORS, BPMClock
+from cratelight.effects import PulseOnBeat, RainbowChase
+```
+
+No build scripts or file combining required. Pure Python, fully modular.
