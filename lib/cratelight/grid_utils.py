@@ -1,3 +1,7 @@
+"""Grid coordinate mapping and LED control utilities"""
+
+import time
+
 # Define your LED coordinate mapping
 ids_by_coord = [
     [297, 298, 287, 286, 279, 278, 270, 269, 262, 261, 254, 253, 245, 244, 237, 236, 229, 228, 220, 219, 212, 211, 204, 203],
@@ -16,6 +20,7 @@ ids_by_coord = [
 
 # Map coordinates to the LED ID
 def coords_to_id(x, y):
+    """Convert grid coordinates (x, y) to LED ID"""
     try:
         return ids_by_coord[y][x]
     except IndexError:
@@ -23,20 +28,21 @@ def coords_to_id(x, y):
 
 # Map LED ID to coordinates
 def id_to_coords(led_id):
+    """Convert LED ID to grid coordinates (x, y)"""
     for y, row in enumerate(ids_by_coord):
         for x, id in enumerate(row):
             if id == led_id:
                 return (x, y)
     return None
 
-# turn off all 
-def clear_grid():
+def clear_grid(pixels, num_leds, off_color=(0, 0, 0)):
+    """Turn off all LEDs"""
     for i in range(num_leds):
-        pixels[i] = OFF
+        pixels[i] = off_color
     pixels.show()
 
-# color border
-def borders(color1, color2):
+def borders(pixels, num_leds, coords_by_id, color1, color2):
+    """Color border with color1 and interior with color2"""
     for i in range(num_leds):
         if ((i + 1) % 25 == 0):
             continue
@@ -49,25 +55,26 @@ def borders(color1, color2):
     pixels.show()
     time.sleep(0.5)
 
-# color by coordinates
-def color_coords(x, y, color):
+def color_coords(pixels, x, y, color):
+    """Color a specific coordinate (x, y)"""
     index = coords_to_id(x, y)
     if index is not None:
         pixels[index - 1] = color
         pixels.show()
     time.sleep(0.5)
 
-# color by led id
-def color_id(id, color):
+def color_id(pixels, id, color):
+    """Color a specific LED by its ID"""
     pixels[id] = color
     pixels.show()
 
-def draw_from_grid(drawing, color1, color2):
+def draw_from_grid(pixels, drawing, color1, color2):
+    """Draw a pattern from a 2D grid array"""
     for y in range(12):
         for x in range(24):
             index = coords_to_id(x, y)
             if drawing[y][x] == 1:
-                pixels[index ] = color1
+                pixels[index] = color1
             else:
                 pixels[index] = color2
     pixels.show()

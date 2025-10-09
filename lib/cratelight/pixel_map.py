@@ -1,5 +1,7 @@
-# Function to create pixel representation of the text
+"""Pixel font mapping for text display on LED grid"""
+
 def create_pixel_representation(text):
+    """Function to create pixel representation of the text"""
     char_map = {
         'A': [
             [0, 1, 0],
@@ -183,7 +185,7 @@ def create_pixel_representation(text):
             [1, 0, 0],
             [1, 1, 1],
         ],
-        ' ': [ 
+        ' ': [
             [0, 0, 0],
             [0, 0, 0],
             [0, 0, 0],
@@ -195,7 +197,6 @@ def create_pixel_representation(text):
     for char in text:
         if char in char_map:
             representation.extend(char_map[char])
-            representation.append([0] * 3) 
+            representation.append([0] * 3)
 
     return representation
-
