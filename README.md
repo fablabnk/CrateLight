@@ -2,12 +2,24 @@
 
 A modular LED animation library for Raspberry Pi Pico with NeoPixel LED grids and strips.
 
+## About
+
+This project is our version of the classic [C-Base](https://www.c-base.org/) 'Mate Light'. The aim is to make a large scale pixel wall using bottle crates and LED strings, where each bottle represents a pixel and has one LED placed just inside the bottleneck. Our first implementation will be to build two 'crate towers' for our coding school's winter festival.
+
+### Hardware
+
+**LED Strings**
+We use WS2811 LED strings running at 5V with a three-wire system (power, data, ground). Each string has 50 LEDs, and each bottle crate contains 24 bottles/LEDs, so one string can drive just over 2 crates. The strings are chainable via connectors and have bare-wire power injection points.
+
+**Power**
+Each LED draws approximately 55.5mA at full white brightness, requiring about 3A per string. We use dedicated power supplies (65W USB chargers providing 3A) to power the LED strings separately from the microcontroller.
+
+**Data**
+A Raspberry Pi Pico running CircuitPython provides voltage to the data line from a GPIO output pin. The Pico and LED string power supplies share a common ground. The Pico's 3.3V GPIO output is sufficient for the WS2811 data signal.
+
 ## Table of Contents
 
-- [Quick Start](#quick-start)
-  - [Hardware Setup](#hardware-setup)
-  - [Simple Effect Example](#simple-effect-example)
-  - [Complete Working Example](#complete-working-example)
+- [About](#about)
 - [Using Pre-Built Effects](#using-pre-built-effects)
 - [Creating Custom Effects](#creating-custom-effects)
 - [Effect Manager](#effect-manager)
@@ -17,97 +29,6 @@ A modular LED animation library for Raspberry Pi Pico with NeoPixel LED grids an
 - [Project Structure](#project-structure)
 - [Features](#features)
 - [Contributing](#contributing)
-
----
-
-## Quick Start
-
-### Hardware Setup
-
-Choose your hardware configuration:
-
-```python
-import sys
-sys.path.insert(0, './lib')
-
-from cratelight import CrateLightGrid, LEDStrip, ZigzagGrid, LinearGrid
-import board
-
-# Option A: CrateLight 24x12 Grid
-config = CrateLightGrid(pin=board.GP28, brightness=0.5)
-
-# Option B: LED Strip (256 LEDs)
-# config = LEDStrip(pin=board.GP2, num_leds=256, brightness=0.1)
-
-# Option C: Zigzag Grid (32x8)
-# config = ZigzagGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
-
-# Option D: Linear Grid (32x8)
-# config = LinearGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
-
-# Create the pixels object
-pixels = config.create_pixels()
-```
-
-### Simple Effect Example
-
-```python
-from cratelight import Effect, COLORS
-
-class MyEffect(Effect):
-    def setup(self):
-        """Initialize your effect"""
-        self.counter = 0
-
-    def update(self):
-        """Run each frame"""
-        # Example: Light up LEDs one by one
-        y = self.counter // self.width
-        x = self.counter % self.width
-
-        led_id = self.coords_to_id(x, y)
-        if led_id is not None:
-            self.pixels[led_id] = COLORS["RED"]
-
-        self.counter += 1
-        return self.counter < (self.width * self.height)
-
-# Create and run effect
-effect = MyEffect(pixels, config.width, config.height, config)
-effect.run(fps=30)
-```
-
-### Complete Working Example
-
-```python
-import sys
-sys.path.insert(0, './lib')
-
-import board
-from cratelight import Effect, COLORS, CrateLightGrid
-
-# 1. Configure hardware
-config = CrateLightGrid(pin=board.GP28, brightness=0.5)
-pixels = config.create_pixels()
-
-# 2. Create effect
-class BlinkEffect(Effect):
-    def setup(self):
-        self.state = False
-
-    def update(self):
-        color = COLORS["BLUE"] if self.state else COLORS["OFF"]
-        for i in range(len(self.pixels)):
-            self.pixels[i] = color
-        self.state = not self.state
-        return True
-
-# 3. Run it
-effect = BlinkEffect(pixels, config.width, config.height, config)
-effect.run(fps=2)
-```
-
-**The beauty:** Same effect code works on different hardware! Just swap the config line.
 
 ---
 
@@ -250,24 +171,6 @@ The library provides a reusable, extensible framework for LED animations with:
 2. **Hardware Abstraction** - Same code works on strips, grids, different layouts
 3. **Clock Synchronization** - Built-in BPM and timing support
 4. **Modular Effects** - Each effect in its own file for easy discovery
-
-### Before vs After
-
-**Before (Modular_circuit_code):**
-- ❌ Code scattered across multiple files
-- ❌ `combine.py` script needed to merge files
-- ❌ Hard to reuse in other projects
-- ❌ No systematic effect creation
-- ❌ No clock synchronization
-
-**After (lib/cratelight):**
-- ✅ Clean library structure
-- ✅ Import and use in any project
-- ✅ Effect base class for consistency
-- ✅ Clock synchronization built-in
-- ✅ Easy for contributors to add effects
-- ✅ Reusable utilities
-- ✅ Examples and templates provided
 
 ### Usage Across Projects
 
