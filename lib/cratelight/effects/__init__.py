@@ -14,6 +14,15 @@ from .color_scroll import (
     RainbowScrollHorizontal,
 )
 
+# Optional GFX font effects (requires adafruit_bitmap_font)
+try:
+    from .scrolling_gfx import GFXScrollingText, GFXStaticText
+    HAS_GFX_EFFECTS = True
+except ImportError:
+    HAS_GFX_EFFECTS = False
+    GFXScrollingText = None
+    GFXStaticText = None
+
 __all__ = [
     'PulseOnBeat',
     'WaveEffect',
@@ -32,4 +41,6 @@ __all__ = [
     'ColorScrollHorizontal',
     'RainbowScrollVertical',
     'RainbowScrollHorizontal',
+    'GFXScrollingText',
+    'GFXStaticText',
 ]

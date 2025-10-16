@@ -9,7 +9,7 @@ All you need to do is:
 """
 
 import board
-from cratelight import COLORS, BPMClock, FixedBPMClock, ZigzagGrid
+from cratelight import COLORS, BPMClock, FixedBPMClock, Font8x8, ZigzagGrid
 from cratelight.effect_manager import EffectManager
 from cratelight.effects.color_scroll import (
     RainbowScrollHorizontal,
@@ -23,14 +23,15 @@ from cratelight.effects.random_fill import RandomStrobe
 from cratelight.effects.scrolling import ScrollingText
 from cratelight.effects.wave import WaveEffect
 
-
 # =====================================================
 # 🔧 HARDWARE CONFIGURATION
 # =====================================================
 # Pick the configuration that matches your LED setup!
 
 # Example 1: Vertical zigzag grid (32x8 LEDs, columns alternate up/down)
-config = ZigzagGrid(pin=board.GP2, width=32, height=8, brightness=0.1, direction="vertical")
+config = ZigzagGrid(
+    pin=board.GP2, width=32, height=8, brightness=0.1, direction="vertical"
+)
 
 # Example 2: Horizontal zigzag grid (rows alternate left/right)
 # config = ZigzagGrid(pin=board.GP2, width=32, height=8, brightness=0.1, direction="horizontal")
@@ -82,32 +83,34 @@ manager = EffectManager(pixels, config.width, config.height, config, clock)
 # Add your effects here! Each effect runs for a specified number of beats.
 # Tip: Use beats=8/16/32 to sync with musical phrases
 
+# Add scrolling text effect with 8x8 font
 manager.add_effect(
     ScrollingText,
-    beats=16,
-    text="FABLAB IS REAL COOL",
+    beats=60,
+    text="WELCOME TO THE FABLAB",
     random_color=True,
-    speed=2
+    speed=4,
+    font=Font8x8,
 )
-manager.add_effect(RainbowScrollHorizontal, beats=16, speed=1.5)
-manager.add_effect(StrobeEffect, beats=8, rainbow=True)
-manager.add_effect(RainbowScrollVertical, beats=16, speed=1.0, direction=1)
-manager.add_effect(FlashOnBeat, beats=8, rainbow=True)
-manager.add_effect(RainbowChase, beats=12)
-manager.add_effect(RainbowScrollHorizontal, beats=16, speed=0.8, direction=-1)
-manager.add_effect(PulseOnBeat, beats=12)
-manager.add_effect(RainbowScrollVertical, beats=16, speed=1.2, direction=-1)
-manager.add_effect(GameOfLife, beats=20, rainbow=True)
-manager.add_effect(StrobeEffect, beats=8, random_color=True)
-manager.add_effect(RandomStrobe, duration=3, flashes=20)
-manager.add_effect(RainbowScrollHorizontal, beats=16, speed=2.0)
-manager.add_effect(WaveEffect, beats=12)
-manager.add_effect(GameOfLife, beats=20)
-manager.add_effect(FlashOnBeat, beats=8, random_color=True)
-manager.add_effect(RainbowScrollVertical, beats=16, speed=1.8)
+# manager.add_effect(RainbowScrollHorizontal, beats=16, speed=1.5)
+# manager.add_effect(StrobeEffect, beats=8, rainbow=True)
+# manager.add_effect(RainbowScrollVertical, beats=16, speed=1.0, direction=1)
+# manager.add_effect(FlashOnBeat, beats=8, rainbow=True)
+# manager.add_effect(RainbowChase, beats=12)
+# manager.add_effect(RainbowScrollHorizontal, beats=16, speed=0.8, direction=-1)
+# manager.add_effect(PulseOnBeat, beats=12)
+# manager.add_effect(RainbowScrollVertical, beats=16, speed=1.2, direction=-1)
+# manager.add_effect(GameOfLife, beats=20, rainbow=True)
+# manager.add_effect(StrobeEffect, beats=8, random_color=True)
+# manager.add_effect(RandomStrobe, duration=3, flashes=20)
+# manager.add_effect(RainbowScrollHorizontal, beats=16, speed=2.0)
+# manager.add_effect(WaveEffect, beats=12)
+# manager.add_effect(GameOfLife, beats=20)
+# manager.add_effect(FlashOnBeat, beats=8, random_color=True)
+# manager.add_effect(RainbowScrollVertical, beats=16, speed=1.8)
 
 print("✅ Effects loaded! Starting light show...")
-print(f"📊 Total effects: {len(manager.effect_queue)}\n")
+print(f"📊 Total effects: {len(manager.effects)}\n")
 
 
 # =====================================================

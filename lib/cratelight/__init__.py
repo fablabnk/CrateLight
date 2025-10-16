@@ -28,7 +28,17 @@ from .hardware import (
     LinearGrid
 )
 from .effect_manager import EffectManager, BPMSyncedEffect
-from .text import Font, TextRenderer
+from .text import Font, Font8x8, TextRenderer
+
+# Optional GFX font support (requires adafruit_bitmap_font)
+try:
+    from .text_gfx import GFXTextRenderer, SimpleGFXTextRenderer
+    HAS_GFX_FONTS = True
+except ImportError:
+    HAS_GFX_FONTS = False
+    GFXTextRenderer = None
+    SimpleGFXTextRenderer = None
+
 from . import effects
 
 __version__ = "0.1.0"
@@ -64,6 +74,10 @@ __all__ = [
     "EffectManager",
     "BPMSyncedEffect",
     "Font",
+    "Font8x8",
     "TextRenderer",
+    "GFXTextRenderer",
+    "SimpleGFXTextRenderer",
+    "HAS_GFX_FONTS",
     "effects",
 ]

@@ -1,7 +1,7 @@
 """Text display effects for LED grids"""
 
 from cratelight import Effect, COLORS, get_random_color
-from cratelight.text import Font, TextRenderer
+from cratelight.text import Font, Font8x8, TextRenderer
 
 
 class StaticText(Effect):
@@ -15,7 +15,7 @@ class StaticText(Effect):
 
     def __init__(self, pixels, width, height, hardware_config, clock=None,
                  text="HELLO", color=COLORS["WHITE"], bg_color=COLORS["OFF"],
-                 x=None, y=None, centered=True):
+                 x=None, y=None, centered=True, font=None):
         """
         Initialize static text effect
 
@@ -26,15 +26,17 @@ class StaticText(Effect):
             x: X position (left edge), None for centered
             y: Y position (top edge), defaults to vertical center
             centered: Center text horizontally (overrides x)
+            font: Font class to use (Font or Font8x8), defaults to Font
         """
         super().__init__(pixels, width, height, hardware_config, clock)
         self.text = text
         self.color = color
         self.bg_color = bg_color
         self.x = x
-        self.y = y if y is not None else (height - Font.CHAR_HEIGHT) // 2
+        self.font = font if font is not None else Font
+        self.y = y if y is not None else (height - self.font.CHAR_HEIGHT) // 2
         self.centered = centered
-        self.renderer = TextRenderer(pixels, hardware_config)
+        self.renderer = TextRenderer(pixels, hardware_config, self.font)
 
     def setup(self):
         """Initialize text display"""
@@ -64,7 +66,7 @@ class ScrollingText(Effect):
 
     def __init__(self, pixels, width, height, hardware_config, clock=None,
                  text="HELLO", color=COLORS["WHITE"], bg_color=COLORS["OFF"],
-                 y=None, speed=2, direction="left", random_color=False):
+                 y=None, speed=2, direction="left", random_color=False, font=None):
         """
         Initialize scrolling text effect
 
@@ -75,17 +77,20 @@ class ScrollingText(Effect):
             y: Y position (top edge), defaults to vertical center
             speed: Pixels to move per frame
             direction: "left" or "right"
+            random_color: Change color on each loop
+            font: Font class to use (Font or Font8x8), defaults to Font
         """
         super().__init__(pixels, width, height, hardware_config, clock)
         self.text = text
         self.color = color
         self.bg_color = bg_color
-        self.y = y if y is not None else (height - Font.CHAR_HEIGHT) // 2
+        self.font = font if font is not None else Font
+        self.y = y if y is not None else (height - self.font.CHAR_HEIGHT) // 2
         self.speed = speed
         self.direction = direction
-        self.renderer = TextRenderer(pixels, hardware_config)
+        self.renderer = TextRenderer(pixels, hardware_config, self.font)
         self.x_pos = 0
-        self.text_width = Font.text_width(text)
+        self.text_width = self.font.text_width(text)
         self.random_color = random_color
 
     def setup(self):
@@ -140,7 +145,7 @@ class BlinkingText(Effect):
 
     def __init__(self, pixels, width, height, hardware_config, clock=None,
                  text="BLINK", color=COLORS["WHITE"], bg_color=COLORS["OFF"],
-                 x=None, y=None, centered=True, blink_speed=15):
+                 x=None, y=None, centered=True, blink_speed=15, font=None):
         """
         Initialize blinking text effect
 
@@ -152,16 +157,18 @@ class BlinkingText(Effect):
             y: Y position (top edge), defaults to vertical center
             centered: Center text horizontally
             blink_speed: Frames between blinks
+            font: Font class to use (Font or Font8x8), defaults to Font
         """
         super().__init__(pixels, width, height, hardware_config, clock)
         self.text = text
         self.color = color
         self.bg_color = bg_color
         self.x = x
-        self.y = y if y is not None else (height - Font.CHAR_HEIGHT) // 2
+        self.font = font if font is not None else Font
+        self.y = y if y is not None else (height - self.font.CHAR_HEIGHT) // 2
         self.centered = centered
         self.blink_speed = blink_speed
-        self.renderer = TextRenderer(pixels, hardware_config)
+        self.renderer = TextRenderer(pixels, hardware_config, self.font)
         self.visible = True
 
     def setup(self):
@@ -201,7 +208,7 @@ class CountdownEffect(Effect):
 
     def __init__(self, pixels, width, height, hardware_config, clock=None,
                  start_value=10, color=COLORS["WHITE"], bg_color=COLORS["OFF"],
-                 centered=True, update_speed=30):
+                 centered=True, update_speed=30, font=None):
         """
         Initialize countdown effect
 
@@ -211,6 +218,7 @@ class CountdownEffect(Effect):
             bg_color: Background color
             centered: Center text horizontally
             update_speed: Frames between countdown updates
+            font: Font class to use (Font or Font8x8), defaults to Font
         """
         super().__init__(pixels, width, height, hardware_config, clock)
         self.start_value = start_value
@@ -219,8 +227,9 @@ class CountdownEffect(Effect):
         self.bg_color = bg_color
         self.centered = centered
         self.update_speed = update_speed
-        self.y = (height - Font.CHAR_HEIGHT) // 2
-        self.renderer = TextRenderer(pixels, hardware_config)
+        self.font = font if font is not None else Font
+        self.y = (height - self.font.CHAR_HEIGHT) // 2
+        self.renderer = TextRenderer(pixels, hardware_config, self.font)
 
     def setup(self):
         """Initialize countdown"""
