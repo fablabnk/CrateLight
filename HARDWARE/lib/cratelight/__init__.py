@@ -25,7 +25,8 @@ from .hardware import (
     CrateLightGrid,
     LEDStrip,
     ZigzagGrid,
-    LinearGrid
+    LinearGrid,
+    VerticalZigzagGrid
 )
 from .effect_manager import EffectManager, BPMSyncedEffect
 from .text import Font, TextRenderer
@@ -61,6 +62,7 @@ __all__ = [
     "LEDStrip",
     "ZigzagGrid",
     "LinearGrid",
+    "VerticalZigzagGrid",
     "EffectManager",
     "BPMSyncedEffect",
     "Font",

@@ -25,6 +25,7 @@ A Raspberry Pi Pico running CircuitPython provides voltage to the data line from
 - [Effect Manager](#effect-manager)
 - [Available Effects](#available-effects)
 - [Adding BPM Sync](#adding-bpm-sync)
+- [Text Rendering](#text-rendering)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [Features](#features)
@@ -116,6 +117,10 @@ Pre-built effects in `cratelight.effects`:
 - **StrobeEffect** - Multi-color strobe
 - **RainbowChase** - Rainbow that moves with the beat
 - **GameOfLife** - Conway's Game of Life cellular automaton
+- **StaticText** - Display static text on LED grid
+- **ScrollingText** - Scroll text across LED grid
+- **BlinkingText** - Blinking text effect
+- **CountdownEffect** - Countdown timer display
 
 ---
 
@@ -161,6 +166,50 @@ effect.run(fps=30)
 
 ---
 
+## Text Rendering
+
+The library includes a built-in text rendering system for displaying text on LED grids:
+
+```python
+from cratelight import Font, TextRenderer, LinearGrid
+from cratelight.effects import StaticText, ScrollingText, BlinkingText
+import board
+
+# Hardware setup
+config = LinearGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
+pixels = config.create_pixels()
+
+# Create text renderer
+renderer = TextRenderer(pixels, config)
+
+# Use with Effect Manager
+from cratelight import EffectManager, BPMClock, COLORS
+
+clock = BPMClock(pin=board.GP15, default_bpm=120)
+manager = EffectManager(pixels, config.width, config.height, config, clock)
+
+# Add text effects
+manager.add_effect(StaticText, duration=3.0, text="HELLO", color=COLORS["RED"])
+manager.add_effect(ScrollingText, duration=8.0, text="CRATELIGHT", color=COLORS["CYAN"])
+manager.add_effect(BlinkingText, duration=4.0, text="ALERT", color=COLORS["ORANGE"])
+manager.run(fps=30)
+
+# Or use the renderer directly
+renderer.center_text("HI", y_pos=1, fg_color=(255, 0, 0))
+pixels.show()
+```
+
+**Text Effect Features:**
+- 5x3 pixel font (26 letters, 10 numbers, 15 symbols)
+- Hardware-agnostic rendering (works with any grid config)
+- Static text display with centering or custom positioning
+- Smooth scrolling text with configurable speed and direction
+- Blinking text with adjustable blink rate
+- Countdown timer effect
+- Custom colors for foreground and background
+
+---
+
 ## Architecture
 
 ### Design Philosophy
@@ -180,8 +229,8 @@ The library can be used in any project:
 import sys
 sys.path.insert(0, '/path/to/CrateLight/lib')
 
-from cratelight import Effect, COLORS, BPMClock
-from cratelight.effects import PulseOnBeat, RainbowChase
+from cratelight import Effect, COLORS, BPMClock, Font, TextRenderer
+from cratelight.effects import PulseOnBeat, RainbowChase, ScrollingText
 
 # Use in your own projects!
 ```
@@ -192,22 +241,27 @@ from cratelight.effects import PulseOnBeat, RainbowChase
 
 ```
 lib/cratelight/
-├── effects/            Pre-built effects library
-│   ├── pulse.py        Pulse and breathing effects
-│   ├── wave.py         Wave patterns
-│   ├── flash.py        Flash and strobe effects
-│   └── rainbow.py      Rainbow effects
-├── effect_base.py      Base Effect class
-├── effect_manager.py   Effect sequencing and cycling
-├── clock.py            BPM synchronization
-├── hardware.py         Hardware configurations
-├── colors.py           Color constants
-├── utils.py            Color manipulation utilities
-├── grid_utils.py       Grid coordinate mapping
-├── game_of_life.py     Conway's Game of Life
-└── README.md           Complete API reference
+├── effects/               Pre-built effects library
+│   ├── pulse.py           Pulse and breathing effects
+│   ├── wave.py            Wave patterns
+│   ├── flash.py           Flash and strobe effects
+│   ├── rainbow.py         Rainbow effects
+│   ├── game_of_life.py    Conway's Game of Life
+│   └── scrolling.py       Text effects (static, scrolling, blinking, countdown)
+├── effect_base.py         Base Effect class
+├── effect_manager.py      Effect sequencing and cycling
+├── clock.py               BPM synchronization
+├── hardware.py            Hardware configurations
+├── text.py                Font and TextRenderer classes
+├── colors.py              Color constants
+├── utils.py               Color manipulation utilities
+├── grid_utils.py          Grid coordinate mapping
+└── README.md              Complete API reference
 
-examples/               Example implementations and templates
+examples/                  Example implementations and templates
+├── custom_effect_template.py
+├── simple_text.py
+└── text_demo.py
 ```
 
 ---
@@ -216,7 +270,7 @@ examples/               Example implementations and templates
 
 **Effect System**
 - Modular effect architecture with base class
-- Pre-built effects library (pulse, wave, flash, rainbow, strobe)
+- Pre-built effects library (pulse, wave, flash, rainbow, strobe, text, Game of Life)
 - Effect manager for sequencing and cycling
 - BPM/clock synchronization support
 
@@ -227,6 +281,7 @@ examples/               Example implementations and templates
 - Multiple hardware configurations
 
 **Utilities**
+- Text rendering with 5x3 pixel font (Font and TextRenderer classes)
 - Grid coordinate mapping
 - Color manipulation (scaling, interpolation, wheel)
 - Wave generation and easing functions
@@ -283,7 +338,8 @@ Effects should:
 
 ```python
 from cratelight import Effect, EffectManager, COLORS, BPMClock
-from cratelight.effects import PulseOnBeat, RainbowChase
+from cratelight import Font, TextRenderer
+from cratelight.effects import PulseOnBeat, RainbowChase, ScrollingText
 ```
 
 No build scripts or file combining required. Pure Python, fully modular.

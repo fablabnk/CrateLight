@@ -114,66 +114,40 @@ class ZigzagGrid(HardwareConfig):
     """
     Grid with zigzag wiring pattern (common for LED matrices)
 
-    Supports both horizontal and vertical zigzag patterns:
-    - "horizontal": Rows alternate left-to-right / right-to-left (default)
-    - "vertical": Columns alternate top-to-bottom / bottom-to-top
+    Even rows go left-to-right, odd rows go right-to-left
 
     Usage:
-        # Horizontal zigzag (rows)
-        config = ZigzagGrid(pin=board.GP2, width=32, height=8, direction="horizontal")
-
-        # Vertical zigzag (columns)
-        config = ZigzagGrid(pin=board.GP2, width=32, height=8, direction="vertical")
+        config = ZigzagGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
+        pixels = config.create_pixels()
     """
 
-    def __init__(self, pin=board.GP2, width=32, height=8, brightness=0.1, direction="horizontal"):
+    def __init__(self, pin=board.GP2, width=32, height=8, brightness=0.1):
         super().__init__(pin, num_leds=width * height, brightness=brightness)
         self.width = width
         self.height = height
-        self.direction = direction.lower()
-
-        if self.direction not in ["horizontal", "vertical"]:
-            raise ValueError(f"direction must be 'horizontal' or 'vertical', got '{direction}'")
 
     def coords_to_id(self, x, y):
-        """Zigzag pattern mapping (horizontal or vertical)"""
+        """Zigzag pattern mapping"""
         if not (0 <= x < self.width and 0 <= y < self.height):
             return None
 
-        if self.direction == "horizontal":
-            # Horizontal zigzag: rows alternate
-            if y % 2 == 0:  # Even rows: left to right
-                return y * self.width + x
-            else:  # Odd rows: right to left
-                return y * self.width + (self.width - 1 - x)
-        else:  # vertical
-            # Vertical zigzag: columns alternate
-            if x % 2 == 0:  # Even columns: top to bottom
-                return x * self.height + y
-            else:  # Odd columns: bottom to top
-                return x * self.height + (self.height - 1 - y)
+        if y % 2 == 0:  # Even rows: left to right
+            return y * self.width + x
+        else:  # Odd rows: right to left
+            return y * self.width + (self.width - 1 - x)
 
     def id_to_coords(self, led_id):
-        """Reverse zigzag pattern mapping (horizontal or vertical)"""
+        """Reverse zigzag pattern mapping"""
         if not (0 <= led_id < self.num_leds):
             return None
 
-        if self.direction == "horizontal":
-            # Horizontal zigzag: rows alternate
-            y = led_id // self.width
-            if y % 2 == 0:  # Even rows: left to right
-                x = led_id % self.width
-            else:  # Odd rows: right to left
-                x = self.width - 1 - (led_id % self.width)
-            return (x, y)
-        else:  # vertical
-            # Vertical zigzag: columns alternate
-            x = led_id // self.height
-            if x % 2 == 0:  # Even columns: top to bottom
-                y = led_id % self.height
-            else:  # Odd columns: bottom to top
-                y = self.height - 1 - (led_id % self.height)
-            return (x, y)
+        y = led_id // self.width
+        if y % 2 == 0:  # Even rows: left to right
+            x = led_id % self.width
+        else:  # Odd rows: right to left
+            x = self.width - 1 - (led_id % self.width)
+
+        return (x, y)
 
 
 class LinearGrid(HardwareConfig):
@@ -203,3 +177,43 @@ class LinearGrid(HardwareConfig):
             y = led_id // self.width
             return (x, y)
         return None
+
+
+class VerticalZigzagGrid(HardwareConfig):
+    """
+    Grid with vertical zigzag wiring pattern (columns alternate up/down)
+
+    Even columns go top-to-bottom, odd columns go bottom-to-top
+
+    Usage:
+        config = VerticalZigzagGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
+        pixels = config.create_pixels()
+    """
+
+    def __init__(self, pin=board.GP2, width=32, height=8, brightness=0.1):
+        super().__init__(pin, num_leds=width * height, brightness=brightness)
+        self.width = width
+        self.height = height
+
+    def coords_to_id(self, x, y):
+        """Vertical zigzag pattern mapping"""
+        if not (0 <= x < self.width and 0 <= y < self.height):
+            return None
+
+        if x % 2 == 0:  # Even columns: top to bottom
+            return x * self.height + y
+        else:  # Odd columns: bottom to top
+            return x * self.height + (self.height - 1 - y)
+
+    def id_to_coords(self, led_id):
+        """Reverse vertical zigzag pattern mapping"""
+        if not (0 <= led_id < self.num_leds):
+            return None
+
+        x = led_id // self.height
+        if x % 2 == 0:  # Even columns: top to bottom
+            y = led_id % self.height
+        else:  # Odd columns: bottom to top
+            y = self.height - 1 - (led_id % self.height)
+
+        return (x, y)
