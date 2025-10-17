@@ -11,6 +11,12 @@ class HardwareConfig:
     """Base class for hardware configurations"""
 
     def __init__(self, pin, num_leds, brightness=0.5):
+        # Input validation
+        if num_leds <= 0:
+            raise ValueError(f"num_leds must be positive, got {num_leds}")
+        if not 0.0 <= brightness <= 1.0:
+            raise ValueError(f"brightness must be between 0.0 and 1.0, got {brightness}")
+
         self.pin = pin
         self.num_leds = num_leds
         self.brightness = brightness
@@ -127,6 +133,12 @@ class ZigzagGrid(HardwareConfig):
     """
 
     def __init__(self, pin=board.GP2, width=32, height=8, brightness=0.1, direction="horizontal"):
+        # Validate grid dimensions before calling super
+        if width <= 0:
+            raise ValueError(f"width must be positive, got {width}")
+        if height <= 0:
+            raise ValueError(f"height must be positive, got {height}")
+
         super().__init__(pin, num_leds=width * height, brightness=brightness)
         self.width = width
         self.height = height
@@ -186,6 +198,12 @@ class LinearGrid(HardwareConfig):
     """
 
     def __init__(self, pin=board.GP2, width=32, height=8, brightness=0.1):
+        # Validate grid dimensions before calling super
+        if width <= 0:
+            raise ValueError(f"width must be positive, got {width}")
+        if height <= 0:
+            raise ValueError(f"height must be positive, got {height}")
+
         super().__init__(pin, num_leds=width * height, brightness=brightness)
         self.width = width
         self.height = height

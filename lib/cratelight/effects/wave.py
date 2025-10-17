@@ -2,7 +2,11 @@
 
 from ..effect_base import Effect
 from ..effect_manager import BPMSyncedEffect
+from ..colors import COLORS
 from ..utils import wheel
+
+# Constants for wave effect
+WAVE_PHASE_MULTIPLIER = 10  # How much the wave moves per beat
 
 
 class WaveEffect(Effect, BPMSyncedEffect):
@@ -17,7 +21,7 @@ class WaveEffect(Effect, BPMSyncedEffect):
         for y in range(self.height):
             for x in range(self.width):
                 # Wave based on position and beat
-                wave_pos = (x + y + phase * 10) % 256
+                wave_pos = (x + y + phase * WAVE_PHASE_MULTIPLIER) % 256
                 color = wheel(int(wave_pos))
 
                 led_id = self.coords_to_id(x, y)
@@ -25,3 +29,7 @@ class WaveEffect(Effect, BPMSyncedEffect):
                     self.pixels[led_id] = color
 
         return True
+
+    def cleanup(self):
+        """Clear display when effect ends"""
+        self.pixels.fill(COLORS["OFF"])

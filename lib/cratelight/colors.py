@@ -16,5 +16,6 @@ COLORS = {
 }
 
 def get_random_color():
-    """Returns a random color tuple from the COLORS dictionary."""
-    return random.choice(list(COLORS.values()))
+    """Returns a random color tuple from the COLORS dictionary (excludes OFF)."""
+    colors = [c for c in COLORS.values() if c != COLORS["OFF"]]
+    return random.choice(colors)

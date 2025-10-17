@@ -14,7 +14,7 @@ class EffectManager:
         manager.run(fps=30)
     """
 
-    def __init__(self, pixels, width, height, hardware_config=None, clock=None):
+    def __init__(self, pixels, width, height, hardware_config=None, clock=None, debug=False):
         """
         Initialize effect manager
 
@@ -24,12 +24,14 @@ class EffectManager:
             height: Grid height
             hardware_config: Hardware configuration object
             clock: Clock source (BPMClock, FixedBPMClock, etc.)
+            debug: Enable debug output (default False)
         """
         self.pixels = pixels
         self.width = width
         self.height = height
         self.hardware_config = hardware_config
         self.clock = clock
+        self.debug = debug
         self.effects = []  # List of (EffectClass, kwargs) tuples
         self.current_effect_index = 0
 
@@ -105,15 +107,18 @@ class EffectManager:
 
             if beats and self.clock:
                 # Run for specified number of beats
-                print(f"Running {effect.__class__.__name__} for {beats} beats")
+                if self.debug:
+                    print(f"Running {effect.__class__.__name__} for {beats} beats")
                 self._run_effect_beats(effect, beats, fps)
             elif duration:
                 # Run for specified duration
-                print(f"Running {effect.__class__.__name__} for {duration}s")
+                if self.debug:
+                    print(f"Running {effect.__class__.__name__} for {duration}s")
                 self._run_effect_duration(effect, duration, fps)
             else:
                 # Run until effect returns False
-                print(f"Running {effect.__class__.__name__} until complete")
+                if self.debug:
+                    print(f"Running {effect.__class__.__name__} until complete")
                 self._run_effect_until_done(effect, fps)
 
             # Move to next effect
@@ -135,7 +140,8 @@ class EffectManager:
                     # Check if beat occurred this frame
                     if self.clock.beat_occurred():
                         beat_count += 1
-                        print(f"Beat {beat_count}/{beats}, BPM: {self.clock.get_bpm():.1f}")
+                        if self.debug:
+                            print(f"Beat {beat_count}/{beats}, BPM: {self.clock.get_bpm():.1f}")
 
                 # Update effect
                 should_continue = effect.update()
@@ -210,9 +216,26 @@ class BPMSyncedEffect:
             return self.clock.get_bpm()
         return 60.0
 
+    def beat_occurred(self):
+        """
+        Check if a beat occurred this frame (most accurate method)
+
+        This is the PREFERRED method for beat detection as it triggers
+        immediately when hardware pulse arrives with zero latency.
+
+        Returns:
+            bool: True if beat occurred this frame, False otherwise
+        """
+        if hasattr(self, 'clock') and self.clock:
+            return self.clock.beat_occurred()
+        return False
+
     def is_beat(self, tolerance=0.1):
         """
-        Check if we're on a beat
+        Check if we're on a beat (phase-based detection)
+
+        DEPRECATED: Use beat_occurred() instead for better timing.
+        This method is kept for backwards compatibility.
 
         Args:
             tolerance: How close to 0.0 phase to consider "on beat"

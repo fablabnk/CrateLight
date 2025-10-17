@@ -5,6 +5,12 @@ from ..effect_manager import BPMSyncedEffect
 from ..colors import COLORS, get_random_color
 from ..utils import scale_color, wheel
 
+# Constants for flash timing and color cycling
+FLASH_DURATION_SECONDS = 0.1
+FLASH_RAINBOW_HUE_STEP = 32
+STROBE_RAINBOW_HUE_STEP = 32
+STROBE_FLASH_PHASE_THRESHOLD = 0.2
+
 
 class FlashOnBeat(Effect, BPMSyncedEffect):
     """
@@ -36,17 +42,16 @@ class FlashOnBeat(Effect, BPMSyncedEffect):
     def setup(self):
         self.beat_color = COLORS["WHITE"]
         self.rainbow_offset = 0
-        self.last_phase = 1.0  # Track when beat occurs
+        self.flash_start_time = None
+        self.flash_duration = FLASH_DURATION_SECONDS
 
     def update(self):
-        phase = self.get_beat_phase()
-
-        # Detect new beat (phase wraps from ~1.0 to ~0.0)
-        if phase < 0.1 and self.last_phase > 0.9:
-            # New beat! Update color
+        # Detect new beat using mixin's standardized beat detection
+        if self.beat_occurred():
+            # New beat! Update color and start flash
             if self.rainbow:
                 self.beat_color = wheel(self.rainbow_offset)
-                self.rainbow_offset = (self.rainbow_offset + 32) % 256
+                self.rainbow_offset = (self.rainbow_offset + FLASH_RAINBOW_HUE_STEP) % 256
             elif self.random_color:
                 self.beat_color = get_random_color()
             elif self.fixed_color:
@@ -54,20 +59,30 @@ class FlashOnBeat(Effect, BPMSyncedEffect):
             else:
                 self.beat_color = COLORS["WHITE"]
 
-        self.last_phase = phase
+            # Start flash immediately
+            self.flash_start_time = self.clock.get_time()
 
-        # Sharp flash at beat start
-        if phase < 0.1:
-            brightness = 1.0 - (phase / 0.1)  # Fast decay
-        else:
-            brightness = 0.0
+        # Calculate brightness based on time since flash started
+        brightness = 0.0
+        if self.flash_start_time is not None and self.clock:
+            elapsed = self.clock.get_time() - self.flash_start_time
+            if elapsed < self.flash_duration:
+                # Fast decay over flash duration
+                brightness = 1.0 - (elapsed / self.flash_duration)
+            else:
+                # Flash finished
+                brightness = 0.0
 
         color = scale_color(self.beat_color, brightness)
 
-        for i in range(len(self.pixels)):
-            self.pixels[i] = color
+        # Optimization: use fill() when setting all pixels to same color
+        self.pixels.fill(color)
 
         return True
+
+    def cleanup(self):
+        """Clear display when effect ends"""
+        self.pixels.fill(COLORS["OFF"])
 
 
 class StrobeEffect(Effect, BPMSyncedEffect):
@@ -106,7 +121,7 @@ class StrobeEffect(Effect, BPMSyncedEffect):
             if self.rainbow:
                 # Smooth rainbow cycling
                 self.current_color = wheel(self.rainbow_offset)
-                self.rainbow_offset = (self.rainbow_offset + 32) % 256
+                self.rainbow_offset = (self.rainbow_offset + STROBE_RAINBOW_HUE_STEP) % 256
             elif self.random_color:
                 # Random color each beat
                 self.current_color = get_random_color()
@@ -118,12 +133,16 @@ class StrobeEffect(Effect, BPMSyncedEffect):
         phase = self.get_beat_phase()
 
         # Quick flash
-        if phase < 0.2:
+        if phase < STROBE_FLASH_PHASE_THRESHOLD:
             color = self.current_color
         else:
             color = COLORS["OFF"]
 
-        for i in range(len(self.pixels)):
-            self.pixels[i] = color
+        # Optimization: use fill() when setting all pixels to same color
+        self.pixels.fill(color)
 
         return True
+
+    def cleanup(self):
+        """Clear display when effect ends"""
+        self.pixels.fill(COLORS["OFF"])

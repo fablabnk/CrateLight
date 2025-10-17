@@ -2,34 +2,112 @@
 
 A modular LED animation library for Raspberry Pi Pico with NeoPixel LED grids and strips.
 
-## About
-
-This project is our version of the classic [C-Base](https://www.c-base.org/) 'Mate Light'. The aim is to make a large scale pixel wall using bottle crates and LED strings, where each bottle represents a pixel and has one LED placed just inside the bottleneck. Our first implementation will be to build two 'crate towers' for our coding school's winter festival.
-
-### Hardware
-
-**LED Strings**
-We use WS2811 LED strings running at 5V with a three-wire system (power, data, ground). Each string has 50 LEDs, and each bottle crate contains 24 bottles/LEDs, so one string can drive just over 2 crates. The strings are chainable via connectors and have bare-wire power injection points.
-
-**Power**
-Each LED draws approximately 55.5mA at full white brightness, requiring about 3A per string. We use dedicated power supplies (65W USB chargers providing 3A) to power the LED strings separately from the microcontroller.
-
-**Data**
-A Raspberry Pi Pico running CircuitPython provides voltage to the data line from a GPIO output pin. The Pico and LED string power supplies share a common ground. The Pico's 3.3V GPIO output is sufficient for the WS2811 data signal.
-
 ## Table of Contents
 
-- [About](#about)
+- [Quick Start](#quick-start)
+  - [Hardware Setup](#hardware-setup)
+  - [Simple Effect Example](#simple-effect-example)
+  - [Complete Working Example](#complete-working-example)
 - [Using Pre-Built Effects](#using-pre-built-effects)
 - [Creating Custom Effects](#creating-custom-effects)
 - [Effect Manager](#effect-manager)
 - [Available Effects](#available-effects)
 - [Adding BPM Sync](#adding-bpm-sync)
-- [Text Rendering](#text-rendering)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [Features](#features)
 - [Contributing](#contributing)
+
+---
+
+## Quick Start
+
+### Hardware Setup
+
+Choose your hardware configuration:
+
+```python
+import sys
+sys.path.insert(0, './lib')
+
+from cratelight import CrateLightGrid, LEDStrip, ZigzagGrid, LinearGrid
+import board
+
+# Option A: CrateLight 24x12 Grid
+config = CrateLightGrid(pin=board.GP28, brightness=0.5)
+
+# Option B: LED Strip (256 LEDs)
+# config = LEDStrip(pin=board.GP2, num_leds=256, brightness=0.1)
+
+# Option C: Zigzag Grid (32x8)
+# config = ZigzagGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
+
+# Option D: Linear Grid (32x8)
+# config = LinearGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
+
+# Create the pixels object
+pixels = config.create_pixels()
+```
+
+### Simple Effect Example
+
+```python
+from cratelight import Effect, COLORS
+
+class MyEffect(Effect):
+    def setup(self):
+        """Initialize your effect"""
+        self.counter = 0
+
+    def update(self):
+        """Run each frame"""
+        # Example: Light up LEDs one by one
+        y = self.counter // self.width
+        x = self.counter % self.width
+
+        led_id = self.coords_to_id(x, y)
+        if led_id is not None:
+            self.pixels[led_id] = COLORS["RED"]
+
+        self.counter += 1
+        return self.counter < (self.width * self.height)
+
+# Create and run effect
+effect = MyEffect(pixels, config.width, config.height, config)
+effect.run(fps=30)
+```
+
+### Complete Working Example
+
+```python
+import sys
+sys.path.insert(0, './lib')
+
+import board
+from cratelight import Effect, COLORS, CrateLightGrid
+
+# 1. Configure hardware
+config = CrateLightGrid(pin=board.GP28, brightness=0.5)
+pixels = config.create_pixels()
+
+# 2. Create effect
+class BlinkEffect(Effect):
+    def setup(self):
+        self.state = False
+
+    def update(self):
+        color = COLORS["BLUE"] if self.state else COLORS["OFF"]
+        for i in range(len(self.pixels)):
+            self.pixels[i] = color
+        self.state = not self.state
+        return True
+
+# 3. Run it
+effect = BlinkEffect(pixels, config.width, config.height, config)
+effect.run(fps=2)
+```
+
+**The beauty:** Same effect code works on different hardware! Just swap the config line.
 
 ---
 
@@ -117,10 +195,6 @@ Pre-built effects in `cratelight.effects`:
 - **StrobeEffect** - Multi-color strobe
 - **RainbowChase** - Rainbow that moves with the beat
 - **GameOfLife** - Conway's Game of Life cellular automaton
-- **StaticText** - Display static text on LED grid
-- **ScrollingText** - Scroll text across LED grid
-- **BlinkingText** - Blinking text effect
-- **CountdownEffect** - Countdown timer display
 
 ---
 
@@ -166,50 +240,6 @@ effect.run(fps=30)
 
 ---
 
-## Text Rendering
-
-The library includes a built-in text rendering system for displaying text on LED grids:
-
-```python
-from cratelight import Font, TextRenderer, LinearGrid
-from cratelight.effects import StaticText, ScrollingText, BlinkingText
-import board
-
-# Hardware setup
-config = LinearGrid(pin=board.GP2, width=32, height=8, brightness=0.1)
-pixels = config.create_pixels()
-
-# Create text renderer
-renderer = TextRenderer(pixels, config)
-
-# Use with Effect Manager
-from cratelight import EffectManager, BPMClock, COLORS
-
-clock = BPMClock(pin=board.GP15, default_bpm=120)
-manager = EffectManager(pixels, config.width, config.height, config, clock)
-
-# Add text effects
-manager.add_effect(StaticText, duration=3.0, text="HELLO", color=COLORS["RED"])
-manager.add_effect(ScrollingText, duration=8.0, text="CRATELIGHT", color=COLORS["CYAN"])
-manager.add_effect(BlinkingText, duration=4.0, text="ALERT", color=COLORS["ORANGE"])
-manager.run(fps=30)
-
-# Or use the renderer directly
-renderer.center_text("HI", y_pos=1, fg_color=(255, 0, 0))
-pixels.show()
-```
-
-**Text Effect Features:**
-- 5x3 pixel font (26 letters, 10 numbers, 15 symbols)
-- Hardware-agnostic rendering (works with any grid config)
-- Static text display with centering or custom positioning
-- Smooth scrolling text with configurable speed and direction
-- Blinking text with adjustable blink rate
-- Countdown timer effect
-- Custom colors for foreground and background
-
----
-
 ## Architecture
 
 ### Design Philosophy
@@ -221,6 +251,24 @@ The library provides a reusable, extensible framework for LED animations with:
 3. **Clock Synchronization** - Built-in BPM and timing support
 4. **Modular Effects** - Each effect in its own file for easy discovery
 
+### Before vs After
+
+**Before (Modular_circuit_code):**
+- ❌ Code scattered across multiple files
+- ❌ `combine.py` script needed to merge files
+- ❌ Hard to reuse in other projects
+- ❌ No systematic effect creation
+- ❌ No clock synchronization
+
+**After (lib/cratelight):**
+- ✅ Clean library structure
+- ✅ Import and use in any project
+- ✅ Effect base class for consistency
+- ✅ Clock synchronization built-in
+- ✅ Easy for contributors to add effects
+- ✅ Reusable utilities
+- ✅ Examples and templates provided
+
 ### Usage Across Projects
 
 The library can be used in any project:
@@ -229,8 +277,8 @@ The library can be used in any project:
 import sys
 sys.path.insert(0, '/path/to/CrateLight/lib')
 
-from cratelight import Effect, COLORS, BPMClock, Font, TextRenderer
-from cratelight.effects import PulseOnBeat, RainbowChase, ScrollingText
+from cratelight import Effect, COLORS, BPMClock
+from cratelight.effects import PulseOnBeat, RainbowChase
 
 # Use in your own projects!
 ```
@@ -241,27 +289,22 @@ from cratelight.effects import PulseOnBeat, RainbowChase, ScrollingText
 
 ```
 lib/cratelight/
-├── effects/               Pre-built effects library
-│   ├── pulse.py           Pulse and breathing effects
-│   ├── wave.py            Wave patterns
-│   ├── flash.py           Flash and strobe effects
-│   ├── rainbow.py         Rainbow effects
-│   ├── game_of_life.py    Conway's Game of Life
-│   └── scrolling.py       Text effects (static, scrolling, blinking, countdown)
-├── effect_base.py         Base Effect class
-├── effect_manager.py      Effect sequencing and cycling
-├── clock.py               BPM synchronization
-├── hardware.py            Hardware configurations
-├── text.py                Font and TextRenderer classes
-├── colors.py              Color constants
-├── utils.py               Color manipulation utilities
-├── grid_utils.py          Grid coordinate mapping
-└── README.md              Complete API reference
+├── effects/            Pre-built effects library
+│   ├── pulse.py        Pulse and breathing effects
+│   ├── wave.py         Wave patterns
+│   ├── flash.py        Flash and strobe effects
+│   └── rainbow.py      Rainbow effects
+├── effect_base.py      Base Effect class
+├── effect_manager.py   Effect sequencing and cycling
+├── clock.py            BPM synchronization
+├── hardware.py         Hardware configurations
+├── colors.py           Color constants
+├── utils.py            Color manipulation utilities
+├── grid_utils.py       Grid coordinate mapping
+├── game_of_life.py     Conway's Game of Life
+└── README.md           Complete API reference
 
-examples/                  Example implementations and templates
-├── custom_effect_template.py
-├── simple_text.py
-└── text_demo.py
+examples/               Example implementations and templates
 ```
 
 ---
@@ -270,7 +313,7 @@ examples/                  Example implementations and templates
 
 **Effect System**
 - Modular effect architecture with base class
-- Pre-built effects library (pulse, wave, flash, rainbow, strobe, text, Game of Life)
+- Pre-built effects library (pulse, wave, flash, rainbow, strobe)
 - Effect manager for sequencing and cycling
 - BPM/clock synchronization support
 
@@ -281,7 +324,6 @@ examples/                  Example implementations and templates
 - Multiple hardware configurations
 
 **Utilities**
-- Text rendering with 5x3 pixel font (Font and TextRenderer classes)
 - Grid coordinate mapping
 - Color manipulation (scaling, interpolation, wheel)
 - Wave generation and easing functions
@@ -297,12 +339,23 @@ examples/                  Example implementations and templates
 
 ## Contributing
 
+We welcome contributions from the community! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+### Quick Start for Contributors
+
+1. Fork the repository
+2. Create a new branch for your effect
+3. Add your effect to `lib/cratelight/effects/`
+4. Test with different hardware configurations
+5. Submit a pull request
+
 ### Creating a New Effect
 
 1. Copy `examples/custom_effect_template.py`
 2. Rename to describe your effect
 3. Implement `setup()` and `update()` methods
-4. Test and submit!
+4. Add to `lib/cratelight/effects/__init__.py`
+5. Test and submit a PR!
 
 ### Effect Guidelines
 
@@ -312,6 +365,8 @@ Effects should:
 - Include example usage
 - Be self-contained (no hardcoded hardware beyond Effect constructor)
 - Support both grid and strip modes where applicable
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for complete guidelines and code style requirements.
 
 ### Roadmap
 
@@ -338,8 +393,7 @@ Effects should:
 
 ```python
 from cratelight import Effect, EffectManager, COLORS, BPMClock
-from cratelight import Font, TextRenderer
-from cratelight.effects import PulseOnBeat, RainbowChase, ScrollingText
+from cratelight.effects import PulseOnBeat, RainbowChase
 ```
 
 No build scripts or file combining required. Pure Python, fully modular.

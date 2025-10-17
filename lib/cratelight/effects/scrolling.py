@@ -1,6 +1,8 @@
 """Text display effects for LED grids"""
 
+import random
 from cratelight import Effect, COLORS, get_random_color
+from cratelight.effect_manager import BPMSyncedEffect
 from cratelight.text import Font, Font8x8, TextRenderer
 
 
@@ -55,13 +57,16 @@ class StaticText(Effect):
         self.renderer.clear()
 
 
-class ScrollingText(Effect):
+class ScrollingText(Effect, BPMSyncedEffect):
     """
     Scroll text across the LED grid
+    Speed now scales with BPM for tight synchronization!
 
     Usage:
         manager.add_effect(ScrollingText, beats=16, text="HELLO WORLD",
-                          color=COLORS["CYAN"], speed=2)
+                          color=COLORS["CYAN"], speed=2, direction="left")
+        manager.add_effect(ScrollingText, beats=16, text="HELLO WORLD",
+                          direction="random")  # Random direction each time
     """
 
     def __init__(self, pixels, width, height, hardware_config, clock=None,
@@ -75,8 +80,8 @@ class ScrollingText(Effect):
             color: Text color
             bg_color: Background color
             y: Y position (top edge), defaults to vertical center
-            speed: Pixels to move per frame
-            direction: "left" or "right"
+            speed: Scroll speed multiplier (base speed scales with BPM)
+            direction: "left", "right", or "random"
             random_color: Change color on each loop
             font: Font class to use (Font or Font8x8), defaults to Font
         """
@@ -95,7 +100,13 @@ class ScrollingText(Effect):
 
     def setup(self):
         """Initialize scroll position"""
-        if self.direction == "left":
+        # Pick random direction if requested
+        if self.direction == "random":
+            self.active_direction = random.choice(["left", "right"])
+        else:
+            self.active_direction = self.direction
+
+        if self.active_direction == "left":
             self.x_pos = self.width
         else:
             self.x_pos = -self.text_width
@@ -106,21 +117,29 @@ class ScrollingText(Effect):
 
     def update(self):
         """Scroll text"""
+        # Calculate BPM-adjusted speed
+        if self.clock:
+            bpm = self.clock.get_bpm()
+            # Scale speed proportionally to BPM (120 BPM = baseline)
+            frame_speed = self.speed * (bpm / 120.0)
+        else:
+            frame_speed = self.speed
+
         # Clear and draw
         self.renderer.clear()
         self.renderer.draw_text(self.text, int(self.x_pos), self.y,
                                self.color, self.bg_color)
 
         # Update position
-        if self.direction == "left":
-            self.x_pos -= self.speed
+        if self.active_direction == "left":
+            self.x_pos -= frame_speed
             # Check if text has scrolled off screen
             if self.x_pos + self.text_width < 0:
                 self.x_pos = self.width  # Wrap around
                 if self.random_color:
                     self.color = get_random_color()
         else:
-            self.x_pos += self.speed
+            self.x_pos += frame_speed
             # Check if text has scrolled off screen
             if self.x_pos > self.width:
                 self.x_pos = -self.text_width  # Wrap around
