@@ -251,24 +251,6 @@ The library provides a reusable, extensible framework for LED animations with:
 3. **Clock Synchronization** - Built-in BPM and timing support
 4. **Modular Effects** - Each effect in its own file for easy discovery
 
-### Before vs After
-
-**Before (Modular_circuit_code):**
-- ❌ Code scattered across multiple files
-- ❌ `combine.py` script needed to merge files
-- ❌ Hard to reuse in other projects
-- ❌ No systematic effect creation
-- ❌ No clock synchronization
-
-**After (lib/cratelight):**
-- ✅ Clean library structure
-- ✅ Import and use in any project
-- ✅ Effect base class for consistency
-- ✅ Clock synchronization built-in
-- ✅ Easy for contributors to add effects
-- ✅ Reusable utilities
-- ✅ Examples and templates provided
-
 ### Usage Across Projects
 
 The library can be used in any project:
