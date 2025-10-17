@@ -164,7 +164,7 @@ class StarfieldEffect(Effect):
         pass
 ```
 
-**Template available:** Copy `examples/custom_effect_template.py` to get started!
+**Template available:** See `examples/custom_effect_template.py` for a starting point!
 
 ---
 
